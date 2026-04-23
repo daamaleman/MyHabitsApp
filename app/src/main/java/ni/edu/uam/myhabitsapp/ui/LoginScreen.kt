@@ -9,6 +9,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -16,6 +17,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.animateContentSize
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -186,60 +188,70 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Crossfade(targetState = mode, label = "authMode") { selectedMode ->
-                    when (selectedMode) {
-                        AuthMode.LOGIN -> LoginForm(
-                            email = loginEmail,
-                            password = loginPassword,
-                            passwordVisible = loginPasswordVisible,
-                            onEmailChange = { loginEmail = it },
-                            onPasswordChange = { loginPassword = it },
-                            onPasswordVisibilityToggle = { loginPasswordVisible = !loginPasswordVisible },
-                            onSubmit = onLogin
-                        )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .animateContentSize(animationSpec = tween(420, easing = FastOutSlowInEasing))
+                ) {
+                    Crossfade(
+                        targetState = mode,
+                        animationSpec = tween(420, easing = FastOutSlowInEasing),
+                        label = "authMode"
+                    ) { selectedMode ->
+                        when (selectedMode) {
+                            AuthMode.LOGIN -> LoginForm(
+                                email = loginEmail,
+                                password = loginPassword,
+                                passwordVisible = loginPasswordVisible,
+                                onEmailChange = { loginEmail = it },
+                                onPasswordChange = { loginPassword = it },
+                                onPasswordVisibilityToggle = { loginPasswordVisible = !loginPasswordVisible },
+                                onSubmit = onLogin
+                            )
 
-                        AuthMode.REGISTER -> RegisterForm(
-                            imageUri = registerImageUri,
-                            name = registerName,
-                            email = registerEmail,
-                            password = registerPassword,
-                            passwordVisible = registerPasswordVisible,
-                            onPickImage = {
-                                imagePickerLauncher.launch(
-                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                                )
-                            },
-                            onNameChange = { registerName = it },
-                            onEmailChange = { registerEmail = it },
-                            onPasswordChange = { registerPassword = it },
-                            onPasswordVisibilityToggle = { registerPasswordVisible = !registerPasswordVisible },
-                            onSubmit = {
-                                if (registerName.isBlank() || registerEmail.isBlank() || registerPassword.isBlank()) {
-                                    Toast.makeText(
-                                        context,
-                                        "Completa nombre, correo y contraseña",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                } else {
-                                    val user = StoredUser(
-                                        name = registerName.trim(),
-                                        email = registerEmail.trim(),
-                                        password = registerPassword,
-                                        imageUri = registerImageUri
+                            AuthMode.REGISTER -> RegisterForm(
+                                imageUri = registerImageUri,
+                                name = registerName,
+                                email = registerEmail,
+                                password = registerPassword,
+                                passwordVisible = registerPasswordVisible,
+                                onPickImage = {
+                                    imagePickerLauncher.launch(
+                                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                                     )
-                                    UserLocalStorage.saveUser(context, user)
-                                    viewModel.applyRegisteredUser(
-                                        name = user.name,
-                                        email = user.email,
-                                        password = user.password,
-                                        imageUri = user.imageUri
-                                    )
-                                    loginEmail = user.email
-                                    loginPassword = user.password
-                                    onLogin()
+                                },
+                                onNameChange = { registerName = it },
+                                onEmailChange = { registerEmail = it },
+                                onPasswordChange = { registerPassword = it },
+                                onPasswordVisibilityToggle = { registerPasswordVisible = !registerPasswordVisible },
+                                onSubmit = {
+                                    if (registerName.isBlank() || registerEmail.isBlank() || registerPassword.isBlank()) {
+                                        Toast.makeText(
+                                            context,
+                                            "Completa nombre, correo y contraseña",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    } else {
+                                        val user = StoredUser(
+                                            name = registerName.trim(),
+                                            email = registerEmail.trim(),
+                                            password = registerPassword,
+                                            imageUri = registerImageUri
+                                        )
+                                        UserLocalStorage.saveUser(context, user)
+                                        viewModel.applyRegisteredUser(
+                                            name = user.name,
+                                            email = user.email,
+                                            password = user.password,
+                                            imageUri = user.imageUri
+                                        )
+                                        loginEmail = user.email
+                                        loginPassword = user.password
+                                        onLogin()
+                                    }
                                 }
-                            }
-                        )
+                            )
+                        }
                     }
                 }
             }
