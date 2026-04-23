@@ -6,18 +6,26 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,6 +33,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
@@ -193,9 +202,23 @@ fun LoginScreen(
                         .fillMaxWidth()
                         .animateContentSize(animationSpec = tween(420, easing = FastOutSlowInEasing))
                 ) {
-                    Crossfade(
+                    AnimatedContent(
                         targetState = mode,
-                        animationSpec = tween(420, easing = FastOutSlowInEasing),
+                        transitionSpec = {
+                            val enterFromStart = if (targetState == AuthMode.REGISTER) 1 else -1
+                            val exitToEnd = if (targetState == AuthMode.REGISTER) -1 else 1
+                            (
+                                slideInHorizontally(
+                                    animationSpec = tween(360, easing = FastOutSlowInEasing)
+                                ) { fullWidth -> fullWidth / 12 * enterFromStart } +
+                                    fadeIn(animationSpec = tween(320))
+                                ).togetherWith(
+                                slideOutHorizontally(
+                                    animationSpec = tween(280, easing = FastOutSlowInEasing)
+                                ) { fullWidth -> fullWidth / 16 * exitToEnd } +
+                                    fadeOut(animationSpec = tween(220))
+                            )
+                        },
                         label = "authMode"
                     ) { selectedMode ->
                         when (selectedMode) {
@@ -272,22 +295,55 @@ private fun AuthBubbleNav(
         color = SurfaceItem,
         border = BorderStroke(1.dp, BorderSubtle)
     ) {
-        Row(
-            modifier = Modifier.padding(6.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        BoxWithConstraints(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(6.dp)
         ) {
-            BubbleTab(
-                title = "Login",
-                isSelected = selectedMode == AuthMode.LOGIN,
-                onClick = { onModeChange(AuthMode.LOGIN) },
-                modifier = Modifier.weight(1f)
+            val tabSpacing = 8.dp
+            val pillWidth = (maxWidth - tabSpacing) / 2
+            val pillOffset by animateDpAsState(
+                targetValue = if (selectedMode == AuthMode.LOGIN) 0.dp else pillWidth + tabSpacing,
+                animationSpec = tween(320, easing = FastOutSlowInEasing),
+                label = "authPillOffset"
             )
-            BubbleTab(
-                title = "Register",
-                isSelected = selectedMode == AuthMode.REGISTER,
-                onClick = { onModeChange(AuthMode.REGISTER) },
-                modifier = Modifier.weight(1f)
-            )
+
+            Box {
+                Surface(
+                    modifier = Modifier
+                        .offset(x = pillOffset)
+                        .size(width = pillWidth, height = 44.dp),
+                    shape = RoundedCornerShape(22.dp),
+                    color = Color.Transparent,
+                    border = BorderStroke(1.dp, BorderSubtle)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                            Brush.horizontalGradient(listOf(AccentGreen, AccentGreenDark))
+                        )
+                    )
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(tabSpacing)
+                ) {
+                    BubbleTab(
+                        title = "Login",
+                        isSelected = selectedMode == AuthMode.LOGIN,
+                        onClick = { onModeChange(AuthMode.LOGIN) },
+                        modifier = Modifier.weight(1f)
+                    )
+                    BubbleTab(
+                        title = "Register",
+                        isSelected = selectedMode == AuthMode.REGISTER,
+                        onClick = { onModeChange(AuthMode.REGISTER) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
         }
     }
 }
@@ -305,16 +361,9 @@ private fun BubbleTab(
         label = "bubbleTextColor"
     )
 
-    val containerBrush = if (isSelected) {
-        Brush.horizontalGradient(listOf(AccentGreen, AccentGreenDark))
-    } else {
-        Brush.horizontalGradient(listOf(SurfaceItem, SurfaceItem))
-    }
-
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(22.dp))
-            .background(containerBrush)
             .clickable(onClick = onClick)
             .padding(vertical = 12.dp),
         contentAlignment = Alignment.Center
