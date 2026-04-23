@@ -1,12 +1,17 @@
 package ni.edu.uam.myhabitsapp.data
 
 import android.content.Context
+import java.net.Inet4Address
+import java.net.NetworkInterface
+import java.util.Locale
 
 private const val PREFS_NAME = "habitflow_user_prefs"
 private const val KEY_NAME = "name"
 private const val KEY_EMAIL = "email"
 private const val KEY_PASSWORD = "password"
 private const val KEY_IMAGE_URI = "image_uri"
+private const val KEY_LAST_LOGIN_EMAIL = "last_login_email"
+private const val KEY_EMAIL_BY_IP_PREFIX = "login_email_ip_"
 
 data class StoredUser(
     val name: String,
@@ -44,5 +49,39 @@ object UserLocalStorage {
             imageUri = imageUri
         )
     }
-}
 
+    fun saveLoginEmailForCurrentIp(context: Context, email: String) {
+        val normalizedEmail = email.trim().lowercase(Locale.getDefault())
+        if (normalizedEmail.isBlank()) return
+
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val editor = prefs.edit().putString(KEY_LAST_LOGIN_EMAIL, normalizedEmail)
+        resolveCurrentIpv4Address()?.let { ip ->
+            editor.putString("$KEY_EMAIL_BY_IP_PREFIX$ip", normalizedEmail)
+        }
+        editor.apply()
+    }
+
+    fun loadLoginEmailForCurrentIp(context: Context): String {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val ipEmail = resolveCurrentIpv4Address()?.let { ip ->
+            prefs.getString("$KEY_EMAIL_BY_IP_PREFIX$ip", null)
+        }
+
+        return ipEmail?.trim().orEmpty().ifBlank {
+            prefs.getString(KEY_LAST_LOGIN_EMAIL, null)?.trim().orEmpty()
+        }
+    }
+
+    private fun resolveCurrentIpv4Address(): String? {
+        return runCatching {
+            NetworkInterface.getNetworkInterfaces().toList()
+                .asSequence()
+                .flatMap { networkInterface -> networkInterface.inetAddresses.toList().asSequence() }
+                .firstOrNull { address ->
+                    !address.isLoopbackAddress && address is Inet4Address
+                }
+                ?.hostAddress
+        }.getOrNull()
+    }
+}

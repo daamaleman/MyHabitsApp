@@ -134,12 +134,15 @@ fun LoginScreen(
 
     LaunchedEffect(Unit) {
         val storedUser = UserLocalStorage.loadUser(context)
+        val emailForCurrentIp = UserLocalStorage.loadLoginEmailForCurrentIp(context)
+
+        loginEmail = emailForCurrentIp.ifBlank { storedUser?.email.orEmpty() }
+        loginPassword = ""
+
         if (storedUser != null) {
-            loginEmail = storedUser.email
-            loginPassword = storedUser.password
             registerName = storedUser.name
             registerEmail = storedUser.email
-            registerPassword = storedUser.password
+            registerPassword = ""
             registerImageUri = storedUser.imageUri
             viewModel.applyRegisteredUser(
                 name = storedUser.name,
@@ -256,12 +259,17 @@ fun LoginScreen(
                                         }
 
                                         else -> {
+                                            UserLocalStorage.saveLoginEmailForCurrentIp(
+                                                context = context,
+                                                email = normalizedEmail
+                                            )
                                             viewModel.applyRegisteredUser(
                                                 name = storedUser.name,
                                                 email = storedUser.email,
                                                 password = storedUser.password,
                                                 imageUri = storedUser.imageUri
                                             )
+                                            loginPassword = ""
                                             onLogin()
                                         }
                                     }
@@ -313,6 +321,10 @@ fun LoginScreen(
                                                 imageUri = registerImageUri
                                             )
                                             UserLocalStorage.saveUser(context, user)
+                                            UserLocalStorage.saveLoginEmailForCurrentIp(
+                                                context = context,
+                                                email = user.email
+                                            )
                                             viewModel.applyRegisteredUser(
                                                 name = user.name,
                                                 email = user.email,
@@ -320,7 +332,7 @@ fun LoginScreen(
                                                 imageUri = user.imageUri
                                             )
                                             loginEmail = user.email
-                                            loginPassword = user.password
+                                            loginPassword = ""
                                             onLogin()
                                         }
                                     }
