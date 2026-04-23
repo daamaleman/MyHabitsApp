@@ -26,7 +26,7 @@ object UserLocalStorage {
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             .edit()
             .putString(KEY_NAME, user.name)
-            .putString(KEY_EMAIL, user.email)
+            .putString(KEY_EMAIL, normalizeEmail(user.email))
             .putString(KEY_PASSWORD, user.password)
             .putString(KEY_IMAGE_URI, user.imageUri)
             .apply()
@@ -45,10 +45,15 @@ object UserLocalStorage {
 
         return StoredUser(
             name = name,
-            email = email,
+            email = normalizeEmail(email),
             password = password,
             imageUri = imageUri
         )
+    }
+
+    fun isEmailAlreadyRegistered(context: Context, email: String): Boolean {
+        val storedUser = loadUser(context) ?: return false
+        return normalizeEmail(storedUser.email) == normalizeEmail(email)
     }
 
     fun saveLoginEmailForCurrentIp(context: Context, email: String) {
@@ -97,4 +102,6 @@ object UserLocalStorage {
                 ?.hostAddress
         }.getOrNull()
     }
+
+    private fun normalizeEmail(email: String): String = email.trim().lowercase(Locale.getDefault())
 }

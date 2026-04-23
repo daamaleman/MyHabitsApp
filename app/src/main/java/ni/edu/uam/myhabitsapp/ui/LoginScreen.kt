@@ -289,8 +289,9 @@ fun LoginScreen(
                                 onPasswordVisibilityToggle = { registerPasswordVisible = !registerPasswordVisible },
                                 onSubmit = {
                                     val normalizedName = capitalizeFirstLetter(registerName)
-                                    val normalizedEmail = registerEmail.trim()
+                                    val normalizedEmail = registerEmail.trim().lowercase()
                                     val normalizedPassword = registerPassword.trim()
+                                    val storedUser = UserLocalStorage.loadUser(context)
 
                                     when {
                                         normalizedName.isBlank() -> {
@@ -305,6 +306,14 @@ fun LoginScreen(
                                             Toast.makeText(
                                                 context,
                                                 "La contrasena debe ser alfanumerica y tener al menos 8 caracteres",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+
+                                        storedUser != null && normalizedEmail == storedUser.email.lowercase() -> {
+                                            Toast.makeText(
+                                                context,
+                                                "Ese correo ya fue registrado",
                                                 Toast.LENGTH_SHORT
                                             ).show()
                                         }
