@@ -140,10 +140,6 @@ fun LoginScreen(
         loginPassword = ""
 
         if (storedUser != null) {
-            registerName = storedUser.name
-            registerEmail = storedUser.email
-            registerPassword = ""
-            registerImageUri = storedUser.imageUri
             viewModel.applyRegisteredUser(
                 name = storedUser.name,
                 email = storedUser.email,
@@ -333,6 +329,12 @@ fun LoginScreen(
                                             )
                                             loginEmail = user.email
                                             loginPassword = ""
+                                            registerName = ""
+                                            registerEmail = ""
+                                            registerPassword = ""
+                                            registerImageUri = null
+                                            registerPasswordVisible = false
+                                            mode = AuthMode.LOGIN
                                             onLogin()
                                         }
                                     }
