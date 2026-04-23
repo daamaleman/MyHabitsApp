@@ -174,7 +174,7 @@ fun LoginScreen(
                     Spacer(modifier = Modifier.height(22.dp))
                     Text(
                         text = "HabitFlow",
-                        color = Color.White,
+                        color = TextPrimary,
                         fontSize = 28.sp,
                         fontWeight = FontWeight.ExtraBold,
                         letterSpacing = (-0.5).sp

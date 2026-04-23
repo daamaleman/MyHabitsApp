@@ -25,11 +25,11 @@ private val HabitFlowDarkScheme = darkColorScheme(
 
 private val HabitFlowLightScheme = lightColorScheme(
     primary = AccentGreenDark,
-    onPrimary = BackgroundDeep,
-    background = Color(0xFFF5F7F7),
-    onBackground = Color(0xFF111111),
+    onPrimary = Color.White,
+    background = Color(0xFFF4F7F9),
+    onBackground = Color(0xFF0F172A),
     surface = Color(0xFFFFFFFF),
-    onSurface = Color(0xFF111111),
+    onSurface = Color(0xFF0F172A),
     secondary = AccentPurple,
     tertiary = AccentOrange,
     outline = Color(0xFFE2E8F0),
@@ -42,11 +42,44 @@ private val HabitFlowShapes = Shapes(
     large = RoundedCornerShape(24.dp)
 )
 
+private fun applyHabitFlowPalette(darkTheme: Boolean) {
+    if (darkTheme) {
+        BackgroundDeep = Color(0xFF121212)
+        SurfaceCard = Color(0xFF1E1E1E)
+        SurfaceItem = Color(0xFF1A1A1A)
+        AccentGreen = Color(0xFF64FFAA)
+        AccentGreenDark = Color(0xFF00C98A)
+        AccentPurple = Color(0xFFA78BFA)
+        AccentOrange = Color(0xFFFB923C)
+        AccentBlue = Color(0xFF60A5FA)
+        TextPrimary = Color(0xFFE0E0E0)
+        TextSecondary = Color(0xFF888888)
+        TextDisabled = Color(0xFF444444)
+        BorderSubtle = Color(0xFF2A2A2A)
+        DangerRed = Color(0xFFF87171)
+    } else {
+        BackgroundDeep = Color(0xFFF4F7F9)
+        SurfaceCard = Color(0xFFFFFFFF)
+        SurfaceItem = Color(0xFFF1F5F9)
+        AccentGreen = Color(0xFF34C98A)
+        AccentGreenDark = Color(0xFF1BAE74)
+        AccentPurple = Color(0xFF8B5CF6)
+        AccentOrange = Color(0xFFF97316)
+        AccentBlue = Color(0xFF3B82F6)
+        TextPrimary = Color(0xFF0F172A)
+        TextSecondary = Color(0xFF64748B)
+        TextDisabled = Color(0xFF94A3B8)
+        BorderSubtle = Color(0xFFE2E8F0)
+        DangerRed = Color(0xFFEF4444)
+    }
+}
+
 @Composable
 fun HabitFlowTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = true,
     content: @Composable () -> Unit
 ) {
+    applyHabitFlowPalette(darkTheme)
     val colorScheme = if (darkTheme) HabitFlowDarkScheme else HabitFlowLightScheme
 
     MaterialTheme(
@@ -59,9 +92,8 @@ fun HabitFlowTheme(
 
 @Composable
 fun MyHabitsAppTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = true,
     content: @Composable () -> Unit
 ) {
     HabitFlowTheme(darkTheme = darkTheme, content = content)
 }
-

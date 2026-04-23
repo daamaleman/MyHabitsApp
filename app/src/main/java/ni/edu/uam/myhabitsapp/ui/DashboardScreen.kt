@@ -206,7 +206,7 @@ private fun DashboardHeader(
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = "Hola, $profileName 👋",
-                color = Color.White,
+                color = TextPrimary,
                 style = MaterialTheme.typography.headlineLarge
             )
             Text(
@@ -291,7 +291,7 @@ private fun ProgressCard(progress: Float) {
                 )
                 Text(
                     text = "$percent%",
-                    color = Color.White,
+                    color = TextPrimary,
                     style = MaterialTheme.typography.displayLarge
                 )
                 Crossfade(targetState = motivation, label = "motivationText") { message ->
@@ -343,7 +343,7 @@ private fun HabitsSection(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = "Mis Hábitos", color = Color.White, style = MaterialTheme.typography.titleLarge)
+            Text(text = "Mis Hábitos", color = TextPrimary, style = MaterialTheme.typography.titleLarge)
             TextButton(onClick = { }) {
                 Text(text = "Ver todos →", color = AccentGreen)
             }
@@ -462,7 +462,7 @@ private fun WeeklySummary(weekDays: List<WeekDay>) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = "Esta semana", color = Color.White, style = MaterialTheme.typography.titleLarge)
+            Text(text = "Esta semana", color = TextPrimary, style = MaterialTheme.typography.titleLarge)
             Text(text = "🔥 3 racha", color = AccentGreen, style = MaterialTheme.typography.labelMedium)
         }
 
@@ -564,7 +564,7 @@ private fun AddHabitBottomSheet(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = "Nuevo hábito", color = Color.White, style = MaterialTheme.typography.titleLarge)
+                Text(text = "Nuevo hábito", color = TextPrimary, style = MaterialTheme.typography.titleLarge)
                 IconButton(onClick = onDismiss) {
                     Icon(Icons.Default.Close, contentDescription = "Cerrar", tint = TextSecondary)
                 }

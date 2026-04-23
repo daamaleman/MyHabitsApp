@@ -23,12 +23,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -38,8 +39,8 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
 import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -47,11 +48,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import ni.edu.uam.myhabitsapp.data.UserLocalStorage
+import ni.edu.uam.myhabitsapp.ui.components.UserAvatarImage
 import ni.edu.uam.myhabitsapp.ui.theme.AccentGreen
+import ni.edu.uam.myhabitsapp.ui.theme.AccentOrange
 import ni.edu.uam.myhabitsapp.ui.theme.AccentPurple
 import ni.edu.uam.myhabitsapp.ui.theme.BackgroundDeep
 import ni.edu.uam.myhabitsapp.ui.theme.BorderSubtle
@@ -60,13 +65,13 @@ import ni.edu.uam.myhabitsapp.ui.theme.HabitFlowTheme
 import ni.edu.uam.myhabitsapp.ui.theme.SurfaceCard
 import ni.edu.uam.myhabitsapp.ui.theme.TextPrimary
 import ni.edu.uam.myhabitsapp.ui.theme.TextSecondary
-import ni.edu.uam.myhabitsapp.ui.components.UserAvatarImage
 
 @Composable
 fun ProfileScreen(
     viewModel: HabitViewModel,
     onBack: () -> Unit
 ) {
+    val context = LocalContext.current
     val profile by viewModel.userProfile.collectAsStateWithLifecycle()
     val habits by viewModel.habits.collectAsStateWithLifecycle()
     val cardShape = RoundedCornerShape(22.dp)
@@ -95,12 +100,12 @@ fun ProfileScreen(
                     border = subtleBorder
                 ) {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver", tint = Color.White)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver", tint = TextPrimary)
                     }
                 }
                 Text(
                     text = "Mi Perfil",
-                    color = Color.White,
+                    color = TextPrimary,
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.padding(start = 10.dp)
                 )
@@ -126,7 +131,7 @@ fun ProfileScreen(
                 }
 
                 Spacer(modifier = Modifier.height(14.dp))
-                Text(text = profile.name, color = Color.White, style = MaterialTheme.typography.headlineLarge)
+                Text(text = profile.name, color = TextPrimary, style = MaterialTheme.typography.headlineLarge)
                 Text(text = profile.email, color = TextSecondary, style = MaterialTheme.typography.bodyMedium)
                 Surface(
                     modifier = Modifier.padding(top = 10.dp),
@@ -169,7 +174,7 @@ fun ProfileScreen(
             }
 
             Spacer(modifier = Modifier.height(22.dp))
-            Text(text = "Configuración", color = Color.White, style = MaterialTheme.typography.titleLarge)
+            Text(text = "Configuración", color = TextPrimary, style = MaterialTheme.typography.titleLarge)
             Spacer(modifier = Modifier.height(12.dp))
 
             Card(
@@ -196,13 +201,17 @@ fun ProfileScreen(
                 )
                 HorizontalDivider(color = BorderSubtle)
                 ListItem(
-                    headlineContent = { Text("Modo Oscuro", color = TextPrimary) },
-                    supportingContent = { Text("Deep Dark activado", color = TextSecondary) },
-                    leadingContent = { Icon(Icons.Default.DarkMode, contentDescription = null, tint = AccentPurple) },
+                    headlineContent = { Text("Modo claro", color = TextPrimary) },
+                    supportingContent = { Text("Se mantiene guardado en la app", color = TextSecondary) },
+                    leadingContent = { Icon(Icons.Default.WbSunny, contentDescription = null, tint = AccentOrange) },
                     trailingContent = {
                         Switch(
-                            checked = profile.darkModeEnabled,
-                            onCheckedChange = viewModel::setDarkModeEnabled,
+                            checked = !profile.darkModeEnabled,
+                            onCheckedChange = { enabled ->
+                                val darkModeEnabled = !enabled
+                                viewModel.setDarkModeEnabled(darkModeEnabled)
+                                UserLocalStorage.saveDarkModeEnabled(context, darkModeEnabled)
+                            },
                             colors = SwitchDefaults.colors(
                                 checkedThumbColor = BackgroundDeep,
                                 checkedTrackColor = AccentGreen,
@@ -289,5 +298,3 @@ private fun ProfilePreview() {
         )
     }
 }
-
-

@@ -12,6 +12,7 @@ private const val KEY_PASSWORD = "password"
 private const val KEY_IMAGE_URI = "image_uri"
 private const val KEY_LAST_LOGIN_EMAIL = "last_login_email"
 private const val KEY_EMAIL_BY_IP_PREFIX = "login_email_ip_"
+private const val KEY_DARK_MODE_ENABLED = "dark_mode_enabled"
 
 data class StoredUser(
     val name: String,
@@ -71,6 +72,18 @@ object UserLocalStorage {
         return ipEmail?.trim().orEmpty().ifBlank {
             prefs.getString(KEY_LAST_LOGIN_EMAIL, null)?.trim().orEmpty()
         }
+    }
+
+    fun saveDarkModeEnabled(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .putBoolean(KEY_DARK_MODE_ENABLED, enabled)
+            .apply()
+    }
+
+    fun loadDarkModeEnabled(context: Context): Boolean {
+        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getBoolean(KEY_DARK_MODE_ENABLED, true)
     }
 
     private fun resolveCurrentIpv4Address(): String? {
