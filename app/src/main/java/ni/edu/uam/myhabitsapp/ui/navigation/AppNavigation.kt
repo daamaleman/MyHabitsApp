@@ -76,7 +76,13 @@ fun AppNavigation(viewModel: HabitViewModel = viewModel()) {
         composable(Screen.EditProfile.route) {
             EditProfileScreen(
                 viewModel = viewModel,
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onAccountDeleted = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(navController.graph.id) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
             )
         }
         composable(Screen.Statistics.route) {

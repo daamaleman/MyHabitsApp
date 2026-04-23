@@ -125,6 +125,11 @@ class HabitViewModel : ViewModel() {
         _userProfile.update { it.copy(name = name, email = email, password = password) }
     }
 
+    fun deleteAccount() {
+        _userProfile.value = initialProfile()
+        _habits.value = sampleHabits()
+    }
+
     private fun syncProfileCompletedCount() {
         val completed = _habits.value.count { it.isCompleted }
         _userProfile.update { it.copy(habitsCompleted = completed) }

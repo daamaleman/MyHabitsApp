@@ -103,6 +103,13 @@ object UserLocalStorage {
         editor.apply()
     }
 
+    fun clearAllData(context: Context) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .clear()
+            .apply()
+    }
+
     private fun resolveCurrentIpv4Address(): String? {
         return runCatching {
             NetworkInterface.getNetworkInterfaces().toList()
