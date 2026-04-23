@@ -75,7 +75,8 @@ fun ProfileScreen(
     viewModel: HabitViewModel,
     onBack: () -> Unit,
     onStatisticsClick: () -> Unit,
-    onPrivacyClick: () -> Unit
+    onPrivacyClick: () -> Unit,
+    onLogoutClick: () -> Unit
 ) {
     val context = LocalContext.current
     val profile by viewModel.userProfile.collectAsStateWithLifecycle()
@@ -256,6 +257,7 @@ fun ProfileScreen(
                     )
                     HorizontalDivider(color = BorderSubtle)
                     ListItem(
+                        modifier = Modifier.clickable(onClick = onLogoutClick),
                         headlineContent = { Text("Cerrar sesión", color = DangerRed) },
                         supportingContent = { Text("Hasta pronto 👋", color = TextSecondary) },
                         leadingContent = { Icon(Icons.Default.DeleteOutline, contentDescription = null, tint = DangerRed) },
@@ -318,7 +320,8 @@ private fun ProfilePreview() {
             viewModel = HabitViewModel(),
             onBack = {},
             onStatisticsClick = {},
-            onPrivacyClick = {}
+            onPrivacyClick = {},
+            onLogoutClick = {}
         )
     }
 }

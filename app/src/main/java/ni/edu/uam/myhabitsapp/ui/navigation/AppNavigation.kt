@@ -61,7 +61,13 @@ fun AppNavigation(viewModel: HabitViewModel = viewModel()) {
                 viewModel = viewModel,
                 onBack = { navController.popBackStack() },
                 onStatisticsClick = { navController.navigate(Screen.Statistics.route) },
-                onPrivacyClick = { navController.navigate(Screen.Privacy.route) }
+                onPrivacyClick = { navController.navigate(Screen.Privacy.route) },
+                onLogoutClick = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(navController.graph.id) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
             )
         }
         composable(Screen.Statistics.route) {
