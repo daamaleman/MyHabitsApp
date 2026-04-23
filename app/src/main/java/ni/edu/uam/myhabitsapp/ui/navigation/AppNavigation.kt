@@ -11,6 +11,7 @@ import androidx.navigation.compose.rememberNavController
 import ni.edu.uam.myhabitsapp.ui.DashboardScreen
 import ni.edu.uam.myhabitsapp.ui.HabitViewModel
 import ni.edu.uam.myhabitsapp.ui.LoginScreen
+import ni.edu.uam.myhabitsapp.ui.PrivacyScreen
 import ni.edu.uam.myhabitsapp.ui.ProfileScreen
 import ni.edu.uam.myhabitsapp.ui.StatisticsScreen
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -20,6 +21,7 @@ sealed class Screen(val route: String) {
     data object Dashboard : Screen("dashboard")
     data object Profile : Screen("profile")
     data object Statistics : Screen("statistics")
+    data object Privacy : Screen("privacy")
 }
 
 @Composable
@@ -58,11 +60,18 @@ fun AppNavigation(viewModel: HabitViewModel = viewModel()) {
             ProfileScreen(
                 viewModel = viewModel,
                 onBack = { navController.popBackStack() },
-                onStatisticsClick = { navController.navigate(Screen.Statistics.route) }
+                onStatisticsClick = { navController.navigate(Screen.Statistics.route) },
+                onPrivacyClick = { navController.navigate(Screen.Privacy.route) }
             )
         }
         composable(Screen.Statistics.route) {
             StatisticsScreen(
+                viewModel = viewModel,
+                onBack = { navController.popBackStack() }
+            )
+        }
+        composable(Screen.Privacy.route) {
+            PrivacyScreen(
                 viewModel = viewModel,
                 onBack = { navController.popBackStack() }
             )

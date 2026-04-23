@@ -71,7 +71,8 @@ import ni.edu.uam.myhabitsapp.ui.theme.TextSecondary
 fun ProfileScreen(
     viewModel: HabitViewModel,
     onBack: () -> Unit,
-    onStatisticsClick: () -> Unit
+    onStatisticsClick: () -> Unit,
+    onPrivacyClick: () -> Unit
 ) {
     val context = LocalContext.current
     val profile by viewModel.userProfile.collectAsStateWithLifecycle()
@@ -237,7 +238,7 @@ fun ProfileScreen(
                     iconTint = Color(0xFF60A5FA),
                     label = "Privacidad",
                     description = "Gestionar datos",
-                    onClick = {}
+                    onClick = onPrivacyClick
                 )
                 HorizontalDivider(color = BorderSubtle)
                 ListItem(
@@ -301,7 +302,8 @@ private fun ProfilePreview() {
         ProfileScreen(
             viewModel = HabitViewModel(),
             onBack = {},
-            onStatisticsClick = {}
+            onStatisticsClick = {},
+            onPrivacyClick = {}
         )
     }
 }

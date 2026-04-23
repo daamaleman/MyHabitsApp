@@ -91,6 +91,18 @@ object UserLocalStorage {
             .getBoolean(KEY_DARK_MODE_ENABLED, true)
     }
 
+    fun clearLoginEmailCache(context: Context) {
+        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val editor = prefs.edit()
+            .remove(KEY_LAST_LOGIN_EMAIL)
+
+        prefs.all.keys
+            .filter { it.startsWith(KEY_EMAIL_BY_IP_PREFIX) }
+            .forEach { key -> editor.remove(key) }
+
+        editor.apply()
+    }
+
     private fun resolveCurrentIpv4Address(): String? {
         return runCatching {
             NetworkInterface.getNetworkInterfaces().toList()
