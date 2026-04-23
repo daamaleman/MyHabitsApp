@@ -67,6 +67,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
@@ -88,8 +89,8 @@ import ni.edu.uam.myhabitsapp.ui.theme.TextPrimary
 import ni.edu.uam.myhabitsapp.ui.theme.TextSecondary
 import ni.edu.uam.myhabitsapp.ui.components.UserAvatarImage
 import java.text.SimpleDateFormat
-import java.util.Locale
 import java.util.Date
+import java.util.Locale
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -105,6 +106,8 @@ fun DashboardScreen(
 
     var showAddSheet by remember { mutableStateOf(false) }
     val contentMaxWidth = 520.dp
+    val horizontalScreenPadding = 24.dp
+    val layoutDirection = LocalLayoutDirection.current
 
     Scaffold(
         containerColor = BackgroundDeep,
@@ -142,9 +145,9 @@ fun DashboardScreen(
                     .fillMaxWidth()
                     .widthIn(max = contentMaxWidth),
                 contentPadding = PaddingValues(
-                    start = 18.dp,
-                    top = 18.dp,
-                    end = 18.dp,
+                    start = horizontalScreenPadding + paddingValues.calculateLeftPadding(layoutDirection),
+                    top = 18.dp + paddingValues.calculateTopPadding(),
+                    end = horizontalScreenPadding + paddingValues.calculateRightPadding(layoutDirection),
                     bottom = paddingValues.calculateBottomPadding() + 100.dp
                 ),
                 verticalArrangement = Arrangement.spacedBy(18.dp)

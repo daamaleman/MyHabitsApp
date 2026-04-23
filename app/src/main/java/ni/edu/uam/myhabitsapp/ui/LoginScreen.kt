@@ -108,8 +108,8 @@ fun LoginScreen(
     var mode by remember { mutableStateOf(AuthMode.LOGIN) }
     val context = LocalContext.current
 
-    var loginEmail by remember { mutableStateOf("ana@correo.com") }
-    var loginPassword by remember { mutableStateOf("12345678") }
+    var loginEmail by remember { mutableStateOf("") }
+    var loginPassword by remember { mutableStateOf("") }
     var loginPasswordVisible by remember { mutableStateOf(false) }
 
     var registerImageUri by remember { mutableStateOf<String?>(null) }
@@ -396,6 +396,7 @@ private fun LoginForm(
             value = email,
             onValueChange = onEmailChange,
             label = "Correo",
+            placeholderText = "ejemplo@correo.com",
             leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Email,
@@ -410,6 +411,7 @@ private fun LoginForm(
             value = password,
             onValueChange = onPasswordChange,
             label = "Contrasena",
+            placeholderText = "Ej: Abc12345",
             leadingIcon = {
                 Crossfade(targetState = password.isBlank(), label = "loginLockIcon") { isBlank ->
                     Icon(
@@ -528,6 +530,7 @@ private fun RegisterForm(
             value = name,
             onValueChange = onNameChange,
             label = "Nombre",
+            placeholderText = "Ej: Ana",
             leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Text,
@@ -542,6 +545,7 @@ private fun RegisterForm(
             value = email,
             onValueChange = onEmailChange,
             label = "Correo",
+            placeholderText = "ejemplo@correo.com",
             leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Email,
@@ -556,6 +560,7 @@ private fun RegisterForm(
             value = password,
             onValueChange = onPasswordChange,
             label = "Contrasena",
+            placeholderText = "Ej: Abc12345",
             leadingIcon = {
                 Crossfade(targetState = password.isBlank(), label = "registerLockIcon") { isBlank ->
                     Icon(
@@ -600,6 +605,7 @@ private fun AuthTextField(
     value: String,
     onValueChange: (String) -> Unit,
     label: String,
+    placeholderText: String? = null,
     leadingIcon: @Composable () -> Unit,
     keyboardOptions: KeyboardOptions,
     trailingIcon: (@Composable () -> Unit)? = null,
@@ -623,6 +629,11 @@ private fun AuthTextField(
         leadingIcon = leadingIcon,
         trailingIcon = trailingIcon,
         label = { Text(label) },
+        placeholder = {
+            if (!placeholderText.isNullOrBlank()) {
+                Text(text = placeholderText, color = TextSecondary.copy(alpha = 0.7f))
+            }
+        },
         visualTransformation = if (isPassword) PasswordVisualTransformation() else androidx.compose.ui.text.input.VisualTransformation.None,
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = animatedBorderColor,
