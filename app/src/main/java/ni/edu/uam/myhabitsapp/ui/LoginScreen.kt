@@ -33,13 +33,17 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddAPhoto
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
@@ -94,11 +98,13 @@ fun LoginScreen(
 
     var loginEmail by remember { mutableStateOf("ana@correo.com") }
     var loginPassword by remember { mutableStateOf("12345678") }
+    var loginPasswordVisible by remember { mutableStateOf(false) }
 
     var registerImageUri by remember { mutableStateOf<String?>(null) }
     var registerName by remember { mutableStateOf("") }
     var registerEmail by remember { mutableStateOf("") }
     var registerPassword by remember { mutableStateOf("") }
+    var registerPasswordVisible by remember { mutableStateOf(false) }
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
@@ -185,8 +191,10 @@ fun LoginScreen(
                         AuthMode.LOGIN -> LoginForm(
                             email = loginEmail,
                             password = loginPassword,
+                            passwordVisible = loginPasswordVisible,
                             onEmailChange = { loginEmail = it },
                             onPasswordChange = { loginPassword = it },
+                            onPasswordVisibilityToggle = { loginPasswordVisible = !loginPasswordVisible },
                             onSubmit = onLogin
                         )
 
@@ -195,6 +203,7 @@ fun LoginScreen(
                             name = registerName,
                             email = registerEmail,
                             password = registerPassword,
+                            passwordVisible = registerPasswordVisible,
                             onPickImage = {
                                 imagePickerLauncher.launch(
                                     PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
@@ -203,6 +212,7 @@ fun LoginScreen(
                             onNameChange = { registerName = it },
                             onEmailChange = { registerEmail = it },
                             onPasswordChange = { registerPassword = it },
+                            onPasswordVisibilityToggle = { registerPasswordVisible = !registerPasswordVisible },
                             onSubmit = {
                                 if (registerName.isBlank() || registerEmail.isBlank() || registerPassword.isBlank()) {
                                     Toast.makeText(
@@ -305,8 +315,10 @@ private fun BubbleTab(
 private fun LoginForm(
     email: String,
     password: String,
+    passwordVisible: Boolean,
     onEmailChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
+    onPasswordVisibilityToggle: () -> Unit,
     onSubmit: () -> Unit
 ) {
     Column {
@@ -328,12 +340,27 @@ private fun LoginForm(
             value = password,
             onValueChange = onPasswordChange,
             label = "Contraseña",
-            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
+            leadingIcon = {
+                Crossfade(targetState = password.isBlank(), label = "loginLockIcon") { empty ->
+                    Icon(
+                        imageVector = if (empty) Icons.Default.LockOpen else Icons.Default.Lock,
+                        contentDescription = null
+                    )
+                }
+            },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Password,
                 imeAction = ImeAction.Done
             ),
-            isPassword = true
+            isPassword = !passwordVisible,
+            trailingIcon = {
+                IconButton(onClick = onPasswordVisibilityToggle) {
+                    Icon(
+                        imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                        contentDescription = if (passwordVisible) "Ocultar contraseña" else "Ver contraseña"
+                    )
+                }
+            }
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -372,10 +399,12 @@ private fun RegisterForm(
     name: String,
     email: String,
     password: String,
+    passwordVisible: Boolean,
     onPickImage: () -> Unit,
     onNameChange: (String) -> Unit,
     onEmailChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
+    onPasswordVisibilityToggle: () -> Unit,
     onSubmit: () -> Unit
 ) {
     Column {
@@ -463,12 +492,27 @@ private fun RegisterForm(
             value = password,
             onValueChange = onPasswordChange,
             label = "Contraseña",
-            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
+            leadingIcon = {
+                Crossfade(targetState = password.isBlank(), label = "registerLockIcon") { empty ->
+                    Icon(
+                        imageVector = if (empty) Icons.Default.LockOpen else Icons.Default.Lock,
+                        contentDescription = null
+                    )
+                }
+            },
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Password,
                 imeAction = ImeAction.Done
             ),
-            isPassword = true
+            isPassword = !passwordVisible,
+            trailingIcon = {
+                IconButton(onClick = onPasswordVisibilityToggle) {
+                    Icon(
+                        imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                        contentDescription = if (passwordVisible) "Ocultar contraseña" else "Ver contraseña"
+                    )
+                }
+            }
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -487,6 +531,7 @@ private fun AuthTextField(
     label: String,
     leadingIcon: @Composable () -> Unit,
     keyboardOptions: KeyboardOptions,
+    trailingIcon: (@Composable () -> Unit)? = null,
     isPassword: Boolean = false
 ) {
     var focused by remember { mutableStateOf(false) }
@@ -505,6 +550,7 @@ private fun AuthTextField(
         shape = RoundedCornerShape(14.dp),
         singleLine = true,
         leadingIcon = leadingIcon,
+        trailingIcon = trailingIcon,
         label = { Text(label) },
         visualTransformation = if (isPassword) PasswordVisualTransformation() else androidx.compose.ui.text.input.VisualTransformation.None,
         colors = OutlinedTextFieldDefaults.colors(
