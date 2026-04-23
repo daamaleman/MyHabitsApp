@@ -224,7 +224,48 @@ fun LoginScreen(
                                 onEmailChange = { loginEmail = it },
                                 onPasswordChange = { loginPassword = it },
                                 onPasswordVisibilityToggle = { loginPasswordVisible = !loginPasswordVisible },
-                                onSubmit = onLogin
+                                onSubmit = {
+                                    val normalizedEmail = loginEmail.trim()
+                                    val normalizedPassword = loginPassword
+                                    val storedUser = UserLocalStorage.loadUser(context)
+
+                                    when {
+                                        storedUser == null -> {
+                                            Toast.makeText(
+                                                context,
+                                                "No hay usuario registrado. Crea una cuenta primero",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+
+                                        normalizedEmail.isBlank() || normalizedPassword.isBlank() -> {
+                                            Toast.makeText(
+                                                context,
+                                                "Ingresa correo y contrasena",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+
+                                        !normalizedEmail.equals(storedUser.email, ignoreCase = true) ||
+                                            normalizedPassword != storedUser.password -> {
+                                            Toast.makeText(
+                                                context,
+                                                "Correo o contrasena incorrectos",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+
+                                        else -> {
+                                            viewModel.applyRegisteredUser(
+                                                name = storedUser.name,
+                                                email = storedUser.email,
+                                                password = storedUser.password,
+                                                imageUri = storedUser.imageUri
+                                            )
+                                            onLogin()
+                                        }
+                                    }
+                                }
                             )
 
                             AuthMode.REGISTER -> RegisterForm(
