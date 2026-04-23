@@ -2,6 +2,7 @@ package ni.edu.uam.myhabitsapp.ui
 
 import android.content.res.Configuration
 import android.net.Uri
+import android.util.Patterns
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -10,9 +11,9 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -25,8 +26,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -44,12 +45,12 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddAPhoto
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.LockOpen
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.LockOpen
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -74,7 +75,6 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.zIndex
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -84,6 +84,11 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
+import ni.edu.uam.myhabitsapp.data.ProfileImageStorage
+import ni.edu.uam.myhabitsapp.data.StoredUser
+import ni.edu.uam.myhabitsapp.data.UserLocalStorage
+import ni.edu.uam.myhabitsapp.ui.components.UserAvatarImage
 import ni.edu.uam.myhabitsapp.ui.theme.AccentGreen
 import ni.edu.uam.myhabitsapp.ui.theme.AccentGreenDark
 import ni.edu.uam.myhabitsapp.ui.theme.BackgroundDeep
@@ -92,10 +97,6 @@ import ni.edu.uam.myhabitsapp.ui.theme.HabitFlowTheme
 import ni.edu.uam.myhabitsapp.ui.theme.SurfaceItem
 import ni.edu.uam.myhabitsapp.ui.theme.TextPrimary
 import ni.edu.uam.myhabitsapp.ui.theme.TextSecondary
-import ni.edu.uam.myhabitsapp.data.StoredUser
-import ni.edu.uam.myhabitsapp.data.ProfileImageStorage
-import ni.edu.uam.myhabitsapp.data.UserLocalStorage
-import ni.edu.uam.myhabitsapp.ui.components.UserAvatarImage
 
 private enum class AuthMode { LOGIN, REGISTER }
 
@@ -150,10 +151,7 @@ fun LoginScreen(
     }
 
     Surface(color = BackgroundDeep) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Column(
                 modifier = Modifier
                     .widthIn(max = 520.dp)
@@ -190,10 +188,7 @@ fun LoginScreen(
                     )
                 }
 
-                AuthBubbleNav(
-                    selectedMode = mode,
-                    onModeChange = { mode = it }
-                )
+                AuthBubbleNav(selectedMode = mode, onModeChange = { mode = it })
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -205,17 +200,17 @@ fun LoginScreen(
                     AnimatedContent(
                         targetState = mode,
                         transitionSpec = {
-                            val enterFromStart = if (targetState == AuthMode.REGISTER) 1 else -1
-                            val exitToEnd = if (targetState == AuthMode.REGISTER) -1 else 1
+                            val enterDirection = if (targetState == AuthMode.REGISTER) 1 else -1
+                            val exitDirection = if (targetState == AuthMode.REGISTER) -1 else 1
                             (
                                 slideInHorizontally(
                                     animationSpec = tween(360, easing = FastOutSlowInEasing)
-                                ) { fullWidth -> fullWidth / 12 * enterFromStart } +
+                                ) { width -> width / 12 * enterDirection } +
                                     fadeIn(animationSpec = tween(320))
                                 ).togetherWith(
                                 slideOutHorizontally(
                                     animationSpec = tween(280, easing = FastOutSlowInEasing)
-                                ) { fullWidth -> fullWidth / 16 * exitToEnd } +
+                                ) { width -> width / 16 * exitDirection } +
                                     fadeOut(animationSpec = tween(220))
                             )
                         },
@@ -243,34 +238,50 @@ fun LoginScreen(
                                         PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                                     )
                                 },
-                                onNameChange = { registerName = it },
+                                onNameChange = { registerName = capitalizeFirstLetter(it) },
                                 onEmailChange = { registerEmail = it },
                                 onPasswordChange = { registerPassword = it },
                                 onPasswordVisibilityToggle = { registerPasswordVisible = !registerPasswordVisible },
                                 onSubmit = {
-                                    if (registerName.isBlank() || registerEmail.isBlank() || registerPassword.isBlank()) {
-                                        Toast.makeText(
-                                            context,
-                                            "Completa nombre, correo y contraseña",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                    } else {
-                                        val user = StoredUser(
-                                            name = registerName.trim(),
-                                            email = registerEmail.trim(),
-                                            password = registerPassword,
-                                            imageUri = registerImageUri
-                                        )
-                                        UserLocalStorage.saveUser(context, user)
-                                        viewModel.applyRegisteredUser(
-                                            name = user.name,
-                                            email = user.email,
-                                            password = user.password,
-                                            imageUri = user.imageUri
-                                        )
-                                        loginEmail = user.email
-                                        loginPassword = user.password
-                                        onLogin()
+                                    val normalizedName = capitalizeFirstLetter(registerName)
+                                    val normalizedEmail = registerEmail.trim()
+                                    val normalizedPassword = registerPassword.trim()
+
+                                    when {
+                                        normalizedName.isBlank() -> {
+                                            Toast.makeText(context, "Escribe tu nombre", Toast.LENGTH_SHORT).show()
+                                        }
+
+                                        !isValidEmail(normalizedEmail) -> {
+                                            Toast.makeText(context, "Ingresa un correo valido", Toast.LENGTH_SHORT).show()
+                                        }
+
+                                        !isValidRegisterPassword(normalizedPassword) -> {
+                                            Toast.makeText(
+                                                context,
+                                                "La contrasena debe ser alfanumerica y tener al menos 8 caracteres",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+
+                                        else -> {
+                                            val user = StoredUser(
+                                                name = normalizedName,
+                                                email = normalizedEmail,
+                                                password = normalizedPassword,
+                                                imageUri = registerImageUri
+                                            )
+                                            UserLocalStorage.saveUser(context, user)
+                                            viewModel.applyRegisteredUser(
+                                                name = user.name,
+                                                email = user.email,
+                                                password = user.password,
+                                                imageUri = user.imageUri
+                                            )
+                                            loginEmail = user.email
+                                            loginPassword = user.password
+                                            onLogin()
+                                        }
                                     }
                                 }
                             )
@@ -320,9 +331,7 @@ private fun AuthBubbleNav(
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(
-                            Brush.horizontalGradient(listOf(AccentGreen, AccentGreenDark))
-                        )
+                            .background(Brush.horizontalGradient(listOf(AccentGreen, AccentGreenDark)))
                     )
                 }
 
@@ -400,11 +409,11 @@ private fun LoginForm(
         AuthTextField(
             value = password,
             onValueChange = onPasswordChange,
-            label = "Contraseña",
+            label = "Contrasena",
             leadingIcon = {
-                Crossfade(targetState = password.isBlank(), label = "loginLockIcon") { empty ->
+                Crossfade(targetState = password.isBlank(), label = "loginLockIcon") { isBlank ->
                     Icon(
-                        imageVector = if (empty) Icons.Default.LockOpen else Icons.Default.Lock,
+                        imageVector = if (isBlank) Icons.Default.LockOpen else Icons.Default.Lock,
                         contentDescription = null
                     )
                 }
@@ -418,7 +427,7 @@ private fun LoginForm(
                 IconButton(onClick = onPasswordVisibilityToggle) {
                     Icon(
                         imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                        contentDescription = if (passwordVisible) "Ocultar contraseña" else "Ver contraseña"
+                        contentDescription = if (passwordVisible) "Ocultar contrasena" else "Ver contrasena"
                     )
                 }
             }
@@ -426,13 +435,10 @@ private fun LoginForm(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        GradientActionButton(
-            text = "Ingresar →",
-            onClick = onSubmit
-        )
+        GradientActionButton(text = "Ingresar ->", onClick = onSubmit)
 
         TextButton(onClick = { }) {
-            Text(text = "¿Olvidaste tu contraseña?", color = AccentGreen)
+            Text(text = "Olvidaste tu contrasena?", color = AccentGreen)
         }
 
         Spacer(modifier = Modifier.height(6.dp))
@@ -446,7 +452,7 @@ private fun LoginForm(
             border = BorderStroke(1.dp, BorderSubtle)
         ) {
             Text(
-                text = "🌐   Google",
+                text = "Google",
                 color = TextSecondary,
                 modifier = Modifier.padding(vertical = 14.dp, horizontal = 16.dp)
             )
@@ -469,10 +475,7 @@ private fun RegisterForm(
     onSubmit: () -> Unit
 ) {
     Column {
-        Box(
-            modifier = Modifier.fillMaxWidth(),
-            contentAlignment = Alignment.Center
-        ) {
+        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             Box(
                 modifier = Modifier
                     .size(96.dp)
@@ -552,11 +555,11 @@ private fun RegisterForm(
         AuthTextField(
             value = password,
             onValueChange = onPasswordChange,
-            label = "Contraseña",
+            label = "Contrasena",
             leadingIcon = {
-                Crossfade(targetState = password.isBlank(), label = "registerLockIcon") { empty ->
+                Crossfade(targetState = password.isBlank(), label = "registerLockIcon") { isBlank ->
                     Icon(
-                        imageVector = if (empty) Icons.Default.LockOpen else Icons.Default.Lock,
+                        imageVector = if (isBlank) Icons.Default.LockOpen else Icons.Default.Lock,
                         contentDescription = null
                     )
                 }
@@ -570,7 +573,7 @@ private fun RegisterForm(
                 IconButton(onClick = onPasswordVisibilityToggle) {
                     Icon(
                         imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                        contentDescription = if (passwordVisible) "Ocultar contraseña" else "Ver contraseña"
+                        contentDescription = if (passwordVisible) "Ocultar contrasena" else "Ver contrasena"
                     )
                 }
             }
@@ -578,9 +581,16 @@ private fun RegisterForm(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        GradientActionButton(
-            text = "Crear cuenta →",
-            onClick = onSubmit
+        GradientActionButton(text = "Crear cuenta ->", onClick = onSubmit)
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Text(
+            text = "El nombre inicia en mayuscula automaticamente. Correo valido. Contrasena alfanumerica de al menos 8 caracteres.",
+            color = TextSecondary.copy(alpha = 0.65f),
+            fontSize = 10.sp,
+            lineHeight = 12.sp,
+            modifier = Modifier.fillMaxWidth()
         )
     }
 }
@@ -595,9 +605,9 @@ private fun AuthTextField(
     trailingIcon: (@Composable () -> Unit)? = null,
     isPassword: Boolean = false
 ) {
-    var focused by remember { mutableStateOf(false) }
-    val borderColor by animateColorAsState(
-        targetValue = if (focused) AccentGreen else BorderSubtle,
+    var isFocused by remember { mutableStateOf(false) }
+    val animatedBorderColor by animateColorAsState(
+        targetValue = if (isFocused) AccentGreen else BorderSubtle,
         animationSpec = tween(250),
         label = "authBorderColor"
     )
@@ -607,7 +617,7 @@ private fun AuthTextField(
         onValueChange = onValueChange,
         modifier = Modifier
             .fillMaxWidth()
-            .onFocusChanged { focused = it.isFocused },
+            .onFocusChanged { isFocused = it.isFocused },
         shape = RoundedCornerShape(14.dp),
         singleLine = true,
         leadingIcon = leadingIcon,
@@ -615,7 +625,7 @@ private fun AuthTextField(
         label = { Text(label) },
         visualTransformation = if (isPassword) PasswordVisualTransformation() else androidx.compose.ui.text.input.VisualTransformation.None,
         colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = borderColor,
+            focusedBorderColor = animatedBorderColor,
             unfocusedBorderColor = BorderSubtle,
             focusedContainerColor = SurfaceItem,
             unfocusedContainerColor = SurfaceItem,
@@ -666,15 +676,24 @@ private fun GradientActionButton(
     }
 }
 
+private fun capitalizeFirstLetter(value: String): String {
+    val trimmed = value.trimStart()
+    if (trimmed.isBlank()) return ""
+    return trimmed.replaceFirstChar { char ->
+        if (char.isLowerCase()) char.titlecase() else char.toString()
+    }
+}
+
+private fun isValidEmail(value: String): Boolean = Patterns.EMAIL_ADDRESS.matcher(value).matches()
+
+private fun isValidRegisterPassword(value: String): Boolean {
+    return value.length >= 8 && value.matches(Regex("^[A-Za-z0-9]+$"))
+}
+
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, showBackground = true)
 @Composable
 private fun LoginScreenPreview() {
     HabitFlowTheme {
-        LoginScreen(
-            viewModel = HabitViewModel(),
-            onLogin = {}
-        )
+        LoginScreen(viewModel = HabitViewModel(), onLogin = {})
     }
 }
-
-
