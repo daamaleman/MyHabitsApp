@@ -121,8 +121,8 @@ class HabitViewModel : ViewModel() {
         _userProfile.update { it.copy(imageUri = imageUri) }
     }
 
-    fun updateProfile(name: String, email: String) {
-        _userProfile.update { it.copy(name = name, email = email) }
+    fun updateProfile(name: String, email: String, password: String) {
+        _userProfile.update { it.copy(name = name, email = email, password = password) }
     }
 
     private fun syncProfileCompletedCount() {
