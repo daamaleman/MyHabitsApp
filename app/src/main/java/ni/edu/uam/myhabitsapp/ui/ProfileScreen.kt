@@ -6,6 +6,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -69,7 +70,8 @@ import ni.edu.uam.myhabitsapp.ui.theme.TextSecondary
 @Composable
 fun ProfileScreen(
     viewModel: HabitViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onStatisticsClick: () -> Unit
 ) {
     val context = LocalContext.current
     val profile by viewModel.userProfile.collectAsStateWithLifecycle()
@@ -226,14 +228,16 @@ fun ProfileScreen(
                     icon = Icons.Default.BarChart,
                     iconTint = Color(0xFFFB923C),
                     label = "Estadísticas",
-                    description = "Ver historial completo"
+                    description = "Ver historial completo",
+                    onClick = onStatisticsClick
                 )
                 HorizontalDivider(color = BorderSubtle)
                 SettingsChevronItem(
                     icon = Icons.Default.Lock,
                     iconTint = Color(0xFF60A5FA),
                     label = "Privacidad",
-                    description = "Gestionar datos"
+                    description = "Gestionar datos",
+                    onClick = {}
                 )
                 HorizontalDivider(color = BorderSubtle)
                 ListItem(
@@ -278,9 +282,11 @@ private fun SettingsChevronItem(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     iconTint: Color,
     label: String,
-    description: String
+    description: String,
+    onClick: () -> Unit
 ) {
     ListItem(
+        modifier = Modifier.clickable(onClick = onClick),
         headlineContent = { Text(label, color = TextPrimary) },
         supportingContent = { Text(description, color = TextSecondary) },
         leadingContent = { Icon(icon, contentDescription = null, tint = iconTint) },
@@ -294,7 +300,8 @@ private fun ProfilePreview() {
     HabitFlowTheme {
         ProfileScreen(
             viewModel = HabitViewModel(),
-            onBack = {}
+            onBack = {},
+            onStatisticsClick = {}
         )
     }
 }

@@ -12,12 +12,14 @@ import ni.edu.uam.myhabitsapp.ui.DashboardScreen
 import ni.edu.uam.myhabitsapp.ui.HabitViewModel
 import ni.edu.uam.myhabitsapp.ui.LoginScreen
 import ni.edu.uam.myhabitsapp.ui.ProfileScreen
+import ni.edu.uam.myhabitsapp.ui.StatisticsScreen
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 sealed class Screen(val route: String) {
     data object Login : Screen("login")
     data object Dashboard : Screen("dashboard")
     data object Profile : Screen("profile")
+    data object Statistics : Screen("statistics")
 }
 
 @Composable
@@ -54,6 +56,13 @@ fun AppNavigation(viewModel: HabitViewModel = viewModel()) {
         }
         composable(Screen.Profile.route) {
             ProfileScreen(
+                viewModel = viewModel,
+                onBack = { navController.popBackStack() },
+                onStatisticsClick = { navController.navigate(Screen.Statistics.route) }
+            )
+        }
+        composable(Screen.Statistics.route) {
+            StatisticsScreen(
                 viewModel = viewModel,
                 onBack = { navController.popBackStack() }
             )

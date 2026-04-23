@@ -3,6 +3,7 @@ package ni.edu.uam.myhabitsapp.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -13,6 +14,25 @@ import ni.edu.uam.myhabitsapp.model.Habit
 import ni.edu.uam.myhabitsapp.model.HabitCategory
 import ni.edu.uam.myhabitsapp.model.UserProfile
 import ni.edu.uam.myhabitsapp.model.WeekDay
+
+data class CategoryStats(
+    val category: HabitCategory,
+    val count: Int,
+    val percent: Float
+)
+
+data class StatisticsUiState(
+    val totalHabits: Int = 0,
+    val completedHabits: Int = 0,
+    val pendingHabits: Int = 0,
+    val completionPercent: Float = 0f,
+    val currentStreak: Int = 0,
+    val todayCompletedHabits: Int = 0,
+    val weekCompletedDays: Int = 0,
+    val weekCompletionPercent: Float = 0f,
+    val categories: List<CategoryStats> = emptyList(),
+    val weekDays: List<WeekDay> = emptyList()
+)
 
 class HabitViewModel : ViewModel() {
 
@@ -30,6 +50,34 @@ class HabitViewModel : ViewModel() {
             if (list.isEmpty()) 0f else list.count { it.isCompleted }.toFloat() / list.size.toFloat()
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0f)
+
+    val statisticsState: StateFlow<StatisticsUiState> = combine(habits, weekDays, userProfile) { habits, weekDays, profile ->
+        val totalHabits = habits.size
+        val completedHabits = habits.count { it.isCompleted }
+        val pendingHabits = totalHabits - completedHabits
+        val completionPercent = if (totalHabits == 0) 0f else completedHabits.toFloat() / totalHabits.toFloat()
+        val weekCompletedDays = weekDays.count { it.isCompleted }
+        val weekCompletionPercent = if (weekDays.isEmpty()) 0f else weekCompletedDays.toFloat() / weekDays.size.toFloat()
+
+        val categories = HabitCategory.entries.map { category ->
+            val count = habits.count { it.category == category }
+            val percent = if (totalHabits == 0) 0f else count.toFloat() / totalHabits.toFloat()
+            CategoryStats(category = category, count = count, percent = percent)
+        }.filter { it.count > 0 }
+
+        StatisticsUiState(
+            totalHabits = totalHabits,
+            completedHabits = completedHabits,
+            pendingHabits = pendingHabits,
+            completionPercent = completionPercent,
+            currentStreak = profile.currentStreak,
+            todayCompletedHabits = completedHabits,
+            weekCompletedDays = weekCompletedDays,
+            weekCompletionPercent = weekCompletionPercent,
+            categories = categories,
+            weekDays = weekDays
+        )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), StatisticsUiState())
 
     fun toggleHabit(habitId: String) {
         _habits.update { list ->
