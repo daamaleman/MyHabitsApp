@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -58,6 +59,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -76,6 +78,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -117,6 +120,9 @@ fun LoginScreen(
     var registerEmail by remember { mutableStateOf("") }
     var registerPassword by remember { mutableStateOf("") }
     var registerPasswordVisible by remember { mutableStateOf(false) }
+    val layoutDirection = LocalLayoutDirection.current
+    val contentMaxWidth = 520.dp
+    val horizontalScreenPadding = 24.dp
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
@@ -149,14 +155,21 @@ fun LoginScreen(
         }
     }
 
-    Surface(color = BackgroundDeep) {
+    Scaffold(containerColor = BackgroundDeep) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Column(
                 modifier = Modifier
-                    .widthIn(max = 520.dp)
                     .fillMaxWidth()
+                    .widthIn(max = contentMaxWidth)
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                    .padding(
+                        PaddingValues(
+                            start = horizontalScreenPadding + paddingValues.calculateLeftPadding(layoutDirection),
+                            top = 18.dp + paddingValues.calculateTopPadding(),
+                            end = horizontalScreenPadding + paddingValues.calculateRightPadding(layoutDirection),
+                            bottom = 24.dp + paddingValues.calculateBottomPadding()
+                        )
+                    ),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {

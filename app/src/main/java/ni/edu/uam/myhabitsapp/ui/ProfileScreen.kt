@@ -10,6 +10,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -38,6 +39,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -50,6 +52,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -79,174 +82,186 @@ fun ProfileScreen(
     val habits by viewModel.habits.collectAsStateWithLifecycle()
     val cardShape = RoundedCornerShape(22.dp)
     val subtleBorder = BorderStroke(1.dp, BorderSubtle)
+    val layoutDirection = LocalLayoutDirection.current
+    val contentMaxWidth = 520.dp
+    val horizontalScreenPadding = 24.dp
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(BackgroundDeep)
-            .padding(horizontal = 24.dp, vertical = 24.dp),
-        contentAlignment = Alignment.TopCenter
-    ) {
-        Column(
+    Scaffold(containerColor = BackgroundDeep) { paddingValues ->
+        Box(
             modifier = Modifier
-                .widthIn(max = 520.dp)
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
+                .fillMaxSize()
+                .background(BackgroundDeep),
+            contentAlignment = Alignment.TopCenter
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = SurfaceCard,
-                    border = subtleBorder
-                ) {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver", tint = TextPrimary)
-                    }
-                }
-                Text(
-                    text = "Mi Perfil",
-                    color = TextPrimary,
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(start = 10.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                Box(
-                    modifier = Modifier
-                        .size(84.dp)
-                        .clip(CircleShape)
-                        .background(Brush.linearGradient(listOf(AccentPurple, AccentGreen)))
-                        .border(2.dp, AccentGreen.copy(alpha = 0.5f), CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    UserAvatarImage(
-                        imageUri = profile.imageUri,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(CircleShape)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .widthIn(max = contentMaxWidth)
+                    .verticalScroll(rememberScrollState())
+                    .padding(
+                        PaddingValues(
+                            start = horizontalScreenPadding + paddingValues.calculateLeftPadding(layoutDirection),
+                            top = 18.dp + paddingValues.calculateTopPadding(),
+                            end = horizontalScreenPadding + paddingValues.calculateRightPadding(layoutDirection),
+                            bottom = 24.dp + paddingValues.calculateBottomPadding()
+                        )
                     )
-                }
-
-                Spacer(modifier = Modifier.height(14.dp))
-                Text(text = profile.name, color = TextPrimary, style = MaterialTheme.typography.headlineLarge)
-                Text(text = profile.email, color = TextSecondary, style = MaterialTheme.typography.bodyMedium)
-                Surface(
-                    modifier = Modifier.padding(top = 10.dp),
-                    color = AccentGreen.copy(alpha = 0.12f),
-                    shape = RoundedCornerShape(20.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = SurfaceCard,
+                        border = subtleBorder
+                    ) {
+                        IconButton(onClick = onBack) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver", tint = TextPrimary)
+                        }
+                    }
                     Text(
-                        text = "⭐ Premium",
-                        color = AccentGreen,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
+                        text = "Mi Perfil",
+                        color = TextPrimary,
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.padding(start = 10.dp)
                     )
                 }
-            }
 
-            Spacer(modifier = Modifier.height(22.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-                StatCard(
-                    modifier = Modifier.weight(1f),
-                    value = profile.habitsCompleted,
-                    label = "Completados",
-                    shape = cardShape,
-                    border = subtleBorder
-                )
-                StatCard(
-                    modifier = Modifier.weight(1f),
-                    value = profile.currentStreak,
-                    label = "Racha 🔥",
-                    shape = cardShape,
-                    border = subtleBorder
-                )
-                StatCard(
-                    modifier = Modifier.weight(1f),
-                    value = habits.size,
-                    label = "Hábitos",
-                    shape = cardShape,
-                    border = subtleBorder
-                )
-            }
-
-            Spacer(modifier = Modifier.height(22.dp))
-            Text(text = "Configuración", color = TextPrimary, style = MaterialTheme.typography.titleLarge)
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Card(
-                shape = cardShape,
-                colors = CardDefaults.cardColors(containerColor = SurfaceCard),
-                border = subtleBorder
-            ) {
-                ListItem(
-                    headlineContent = { Text("Notificaciones", color = TextPrimary) },
-                    supportingContent = { Text("Recordatorios activos", color = TextSecondary) },
-                    leadingContent = { Icon(Icons.Default.Notifications, contentDescription = null, tint = AccentGreen) },
-                    trailingContent = {
-                        Switch(
-                            checked = profile.notificationsEnabled,
-                            onCheckedChange = viewModel::setNotificationsEnabled,
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = BackgroundDeep,
-                                checkedTrackColor = AccentGreen,
-                                uncheckedThumbColor = Color(0xFF555555),
-                                uncheckedTrackColor = Color(0xFF2A2A2A)
-                            )
+                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                    Box(
+                        modifier = Modifier
+                            .size(84.dp)
+                            .clip(CircleShape)
+                            .background(Brush.linearGradient(listOf(AccentPurple, AccentGreen)))
+                            .border(2.dp, AccentGreen.copy(alpha = 0.5f), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        UserAvatarImage(
+                            imageUri = profile.imageUri,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(CircleShape)
                         )
                     }
-                )
-                HorizontalDivider(color = BorderSubtle)
-                ListItem(
-                    headlineContent = { Text("Modo claro", color = TextPrimary) },
-                    supportingContent = { Text("Se mantiene guardado en la app", color = TextSecondary) },
-                    leadingContent = { Icon(Icons.Default.WbSunny, contentDescription = null, tint = AccentOrange) },
-                    trailingContent = {
-                        Switch(
-                            checked = !profile.darkModeEnabled,
-                            onCheckedChange = { enabled ->
-                                val darkModeEnabled = !enabled
-                                viewModel.setDarkModeEnabled(darkModeEnabled)
-                                UserLocalStorage.saveDarkModeEnabled(context, darkModeEnabled)
-                            },
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = BackgroundDeep,
-                                checkedTrackColor = AccentGreen,
-                                uncheckedThumbColor = Color(0xFF555555),
-                                uncheckedTrackColor = Color(0xFF2A2A2A)
-                            )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+                    Text(text = profile.name, color = TextPrimary, style = MaterialTheme.typography.headlineLarge)
+                    Text(text = profile.email, color = TextSecondary, style = MaterialTheme.typography.bodyMedium)
+                    Surface(
+                        modifier = Modifier.padding(top = 10.dp),
+                        color = AccentGreen.copy(alpha = 0.12f),
+                        shape = RoundedCornerShape(20.dp)
+                    ) {
+                        Text(
+                            text = "⭐ Premium",
+                            color = AccentGreen,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
                         )
                     }
-                )
-                HorizontalDivider(color = BorderSubtle)
-                SettingsChevronItem(
-                    icon = Icons.Default.BarChart,
-                    iconTint = Color(0xFFFB923C),
-                    label = "Estadísticas",
-                    description = "Ver historial completo",
-                    onClick = onStatisticsClick
-                )
-                HorizontalDivider(color = BorderSubtle)
-                SettingsChevronItem(
-                    icon = Icons.Default.Lock,
-                    iconTint = Color(0xFF60A5FA),
-                    label = "Privacidad",
-                    description = "Gestionar datos",
-                    onClick = onPrivacyClick
-                )
-                HorizontalDivider(color = BorderSubtle)
-                ListItem(
-                    headlineContent = { Text("Cerrar sesión", color = DangerRed) },
-                    supportingContent = { Text("Hasta pronto 👋", color = TextSecondary) },
-                    leadingContent = { Icon(Icons.Default.DeleteOutline, contentDescription = null, tint = DangerRed) },
-                    trailingContent = { Icon(Icons.Default.ChevronRight, contentDescription = null, tint = TextSecondary) }
-                )
+                }
+
+                Spacer(modifier = Modifier.height(22.dp))
+
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                    StatCard(
+                        modifier = Modifier.weight(1f),
+                        value = profile.habitsCompleted,
+                        label = "Completados",
+                        shape = cardShape,
+                        border = subtleBorder
+                    )
+                    StatCard(
+                        modifier = Modifier.weight(1f),
+                        value = profile.currentStreak,
+                        label = "Racha 🔥",
+                        shape = cardShape,
+                        border = subtleBorder
+                    )
+                    StatCard(
+                        modifier = Modifier.weight(1f),
+                        value = habits.size,
+                        label = "Hábitos",
+                        shape = cardShape,
+                        border = subtleBorder
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(22.dp))
+                Text(text = "Configuración", color = TextPrimary, style = MaterialTheme.typography.titleLarge)
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Card(
+                    shape = cardShape,
+                    colors = CardDefaults.cardColors(containerColor = SurfaceCard),
+                    border = subtleBorder
+                ) {
+                    ListItem(
+                        headlineContent = { Text("Notificaciones", color = TextPrimary) },
+                        supportingContent = { Text("Recordatorios activos", color = TextSecondary) },
+                        leadingContent = { Icon(Icons.Default.Notifications, contentDescription = null, tint = AccentGreen) },
+                        trailingContent = {
+                            Switch(
+                                checked = profile.notificationsEnabled,
+                                onCheckedChange = viewModel::setNotificationsEnabled,
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = BackgroundDeep,
+                                    checkedTrackColor = AccentGreen,
+                                    uncheckedThumbColor = Color(0xFF555555),
+                                    uncheckedTrackColor = Color(0xFF2A2A2A)
+                                )
+                            )
+                        }
+                    )
+                    HorizontalDivider(color = BorderSubtle)
+                    ListItem(
+                        headlineContent = { Text("Modo claro", color = TextPrimary) },
+                        supportingContent = { Text("Se mantiene guardado en la app", color = TextSecondary) },
+                        leadingContent = { Icon(Icons.Default.WbSunny, contentDescription = null, tint = AccentOrange) },
+                        trailingContent = {
+                            Switch(
+                                checked = !profile.darkModeEnabled,
+                                onCheckedChange = { enabled ->
+                                    val darkModeEnabled = !enabled
+                                    viewModel.setDarkModeEnabled(darkModeEnabled)
+                                    UserLocalStorage.saveDarkModeEnabled(context, darkModeEnabled)
+                                },
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = BackgroundDeep,
+                                    checkedTrackColor = AccentGreen,
+                                    uncheckedThumbColor = Color(0xFF555555),
+                                    uncheckedTrackColor = Color(0xFF2A2A2A)
+                                )
+                            )
+                        }
+                    )
+                    HorizontalDivider(color = BorderSubtle)
+                    SettingsChevronItem(
+                        icon = Icons.Default.BarChart,
+                        iconTint = Color(0xFFFB923C),
+                        label = "Estadísticas",
+                        description = "Ver historial completo",
+                        onClick = onStatisticsClick
+                    )
+                    HorizontalDivider(color = BorderSubtle)
+                    SettingsChevronItem(
+                        icon = Icons.Default.Lock,
+                        iconTint = Color(0xFF60A5FA),
+                        label = "Privacidad",
+                        description = "Gestionar datos",
+                        onClick = onPrivacyClick
+                    )
+                    HorizontalDivider(color = BorderSubtle)
+                    ListItem(
+                        headlineContent = { Text("Cerrar sesión", color = DangerRed) },
+                        supportingContent = { Text("Hasta pronto 👋", color = TextSecondary) },
+                        leadingContent = { Icon(Icons.Default.DeleteOutline, contentDescription = null, tint = DangerRed) },
+                        trailingContent = { Icon(Icons.Default.ChevronRight, contentDescription = null, tint = TextSecondary) }
+                    )
+                }
             }
         }
     }

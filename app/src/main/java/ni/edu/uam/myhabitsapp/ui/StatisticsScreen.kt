@@ -9,6 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,6 +28,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -57,28 +60,40 @@ fun StatisticsScreen(
     onBack: () -> Unit
 ) {
     val stats by viewModel.statisticsState.collectAsStateWithLifecycle()
+    val layoutDirection = LocalLayoutDirection.current
+    val contentMaxWidth = 520.dp
+    val horizontalScreenPadding = 24.dp
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(BackgroundDeep)
-            .padding(horizontal = 24.dp, vertical = 24.dp),
-        contentAlignment = Alignment.TopCenter
-    ) {
-        Column(
+    Scaffold(containerColor = BackgroundDeep) { paddingValues ->
+        Box(
             modifier = Modifier
-                .widthIn(max = 520.dp)
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(18.dp)
+                .fillMaxSize()
+                .background(BackgroundDeep),
+            contentAlignment = Alignment.TopCenter
         ) {
-            StatisticsHeader(onBack = onBack)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .widthIn(max = contentMaxWidth)
+                    .verticalScroll(rememberScrollState())
+                    .padding(
+                        PaddingValues(
+                            start = horizontalScreenPadding + paddingValues.calculateLeftPadding(layoutDirection),
+                            top = 18.dp + paddingValues.calculateTopPadding(),
+                            end = horizontalScreenPadding + paddingValues.calculateRightPadding(layoutDirection),
+                            bottom = 24.dp + paddingValues.calculateBottomPadding()
+                        )
+                    ),
+                verticalArrangement = Arrangement.spacedBy(18.dp)
+            ) {
+                StatisticsHeader(onBack = onBack)
 
-            SummaryGrid(stats = stats)
+                SummaryGrid(stats = stats)
 
-            WeeklyCard(stats = stats)
+                WeeklyCard(stats = stats)
 
-            CategoriesCard(stats = stats)
+                CategoriesCard(stats = stats)
+            }
         }
     }
 }
@@ -338,6 +353,4 @@ private fun StatisticsPreview() {
         )
     }
 }
-
-
 
