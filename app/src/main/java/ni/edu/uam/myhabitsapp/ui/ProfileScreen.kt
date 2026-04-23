@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.WbSunny
@@ -74,6 +75,7 @@ import ni.edu.uam.myhabitsapp.ui.theme.TextSecondary
 fun ProfileScreen(
     viewModel: HabitViewModel,
     onBack: () -> Unit,
+    onEditClick: () -> Unit,
     onStatisticsClick: () -> Unit,
     onPrivacyClick: () -> Unit,
     onLogoutClick: () -> Unit
@@ -127,6 +129,16 @@ fun ProfileScreen(
                         style = MaterialTheme.typography.titleLarge,
                         modifier = Modifier.padding(start = 10.dp)
                     )
+                    Spacer(modifier = Modifier.weight(1f))
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = SurfaceCard,
+                        border = subtleBorder
+                    ) {
+                        IconButton(onClick = onEditClick) {
+                            Icon(Icons.Default.Edit, contentDescription = "Editar", tint = TextPrimary)
+                        }
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -319,6 +331,7 @@ private fun ProfilePreview() {
         ProfileScreen(
             viewModel = HabitViewModel(),
             onBack = {},
+            onEditClick = {},
             onStatisticsClick = {},
             onPrivacyClick = {},
             onLogoutClick = {}
