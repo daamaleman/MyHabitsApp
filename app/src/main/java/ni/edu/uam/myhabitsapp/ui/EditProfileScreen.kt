@@ -79,7 +79,7 @@ fun EditProfileScreen(
     var name by remember { mutableStateOf(profile.name) }
     var email by remember { mutableStateOf(profile.email) }
     var currentPassword by remember { mutableStateOf("") }
-    var newPassword by remember { mutableStateOf(profile.password) }
+    var newPassword by remember { mutableStateOf("") }
     
     var currentPasswordVisible by remember { mutableStateOf(false) }
     var newPasswordVisible by remember { mutableStateOf(false) }
@@ -208,6 +208,7 @@ fun EditProfileScreen(
                     onValueChange = { newPassword = it },
                     modifier = Modifier.fillMaxWidth(),
                     label = { Text("Nueva Contraseña") },
+                    placeholder = { Text("Déjala en blanco para no cambiarla") },
                     shape = RoundedCornerShape(14.dp),
                     visualTransformation = if (newPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -235,16 +236,17 @@ fun EditProfileScreen(
 
                 Button(
                     onClick = {
+                        val passwordToSave = if (newPassword.isBlank()) profile.password else newPassword
                         when {
                             currentPassword != profile.password -> {
                                 Toast.makeText(context, "La contraseña actual es incorrecta", Toast.LENGTH_SHORT).show()
                             }
-                            name.isBlank() || email.isBlank() || newPassword.isBlank() -> {
-                                Toast.makeText(context, "Todos los campos son requeridos", Toast.LENGTH_SHORT).show()
+                            name.isBlank() || email.isBlank() -> {
+                                Toast.makeText(context, "Nombre y correo son requeridos", Toast.LENGTH_SHORT).show()
                             }
                             else -> {
-                                viewModel.updateProfile(name.trim(), email.trim(), newPassword)
-                                UserLocalStorage.saveUser(context, StoredUser(name.trim(), email.trim(), newPassword, profile.imageUri))
+                                viewModel.updateProfile(name.trim(), email.trim(), passwordToSave)
+                                UserLocalStorage.saveUser(context, StoredUser(name.trim(), email.trim(), passwordToSave, profile.imageUri))
                                 Toast.makeText(context, "Perfil actualizado", Toast.LENGTH_SHORT).show()
                                 onBack()
                             }

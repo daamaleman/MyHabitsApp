@@ -11,7 +11,9 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -38,6 +40,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -52,6 +55,7 @@ import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -68,6 +72,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -88,6 +93,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import ni.edu.uam.myhabitsapp.data.ProfileImageStorage
 import ni.edu.uam.myhabitsapp.data.StoredUser
 import ni.edu.uam.myhabitsapp.data.UserLocalStorage
@@ -109,6 +116,8 @@ fun LoginScreen(
     onLogin: () -> Unit
 ) {
     var mode by remember { mutableStateOf(AuthMode.LOGIN) }
+    var isLoggingIn by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
 
     var loginEmail by remember { mutableStateOf("") }
@@ -233,6 +242,7 @@ fun LoginScreen(
                                 email = loginEmail,
                                 password = loginPassword,
                                 passwordVisible = loginPasswordVisible,
+                                isAnimating = isLoggingIn,
                                 onEmailChange = { loginEmail = it },
                                 onPasswordChange = { loginPassword = it },
                                 onPasswordVisibilityToggle = { loginPasswordVisible = !loginPasswordVisible },
@@ -279,7 +289,11 @@ fun LoginScreen(
                                                 imageUri = storedUser.imageUri
                                             )
                                             loginPassword = ""
-                                            onLogin()
+                                            coroutineScope.launch {
+                                                isLoggingIn = true
+                                                delay(1200)
+                                                onLogin()
+                                            }
                                         }
                                     }
                                 }
@@ -291,6 +305,7 @@ fun LoginScreen(
                                 email = registerEmail,
                                 password = registerPassword,
                                 passwordVisible = registerPasswordVisible,
+                                isAnimating = isLoggingIn,
                                 onPickImage = {
                                     imagePickerLauncher.launch(
                                         PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
@@ -356,8 +371,12 @@ fun LoginScreen(
                                             registerPassword = ""
                                             registerImageUri = null
                                             registerPasswordVisible = false
-                                            mode = AuthMode.LOGIN
-                                            onLogin()
+                                            coroutineScope.launch {
+                                                isLoggingIn = true
+                                                delay(1200)
+                                                mode = AuthMode.LOGIN
+                                                onLogin()
+                                            }
                                         }
                                     }
                                 }
@@ -463,6 +482,7 @@ private fun LoginForm(
     email: String,
     password: String,
     passwordVisible: Boolean,
+    isAnimating: Boolean,
     onEmailChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
     onPasswordVisibilityToggle: () -> Unit,
@@ -514,7 +534,7 @@ private fun LoginForm(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        GradientActionButton(text = "Ingresar ->", onClick = onSubmit)
+        GradientActionButton(text = "Ingresar", isAnimating = isAnimating, onClick = onSubmit)
 
         TextButton(onClick = { }) {
             Text(text = "Olvidaste tu contrasena?", color = AccentGreen)
@@ -546,6 +566,7 @@ private fun RegisterForm(
     email: String,
     password: String,
     passwordVisible: Boolean,
+    isAnimating: Boolean,
     onPickImage: () -> Unit,
     onNameChange: (String) -> Unit,
     onEmailChange: (String) -> Unit,
@@ -663,7 +684,7 @@ private fun RegisterForm(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        GradientActionButton(text = "Crear cuenta ->", onClick = onSubmit)
+        GradientActionButton(text = "Crear cuenta", isAnimating = isAnimating, onClick = onSubmit)
 
         Spacer(modifier = Modifier.height(10.dp))
 
@@ -732,6 +753,7 @@ private fun AuthTextField(
 @Composable
 private fun GradientActionButton(
     text: String,
+    isAnimating: Boolean,
     onClick: () -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -741,6 +763,19 @@ private fun GradientActionButton(
         animationSpec = tween(120),
         label = "authButtonScale"
     )
+
+    val pigeonX = remember { Animatable(-40f) }
+
+    LaunchedEffect(isAnimating) {
+        if (isAnimating) {
+            pigeonX.animateTo(
+                targetValue = 350f,
+                animationSpec = tween(1000, easing = LinearOutSlowInEasing)
+            )
+        } else {
+            pigeonX.snapTo(-40f)
+        }
+    }
 
     Button(
         onClick = onClick,
@@ -760,7 +795,25 @@ private fun GradientActionButton(
         ),
         interactionSource = interactionSource
     ) {
-        Text(text = text, fontWeight = FontWeight.ExtraBold)
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(
+                text = text,
+                fontWeight = FontWeight.ExtraBold,
+                modifier = Modifier.graphicsLayer(alpha = if (isAnimating) 0f else 1f)
+            )
+            
+            if (isAnimating) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Send,
+                    contentDescription = null,
+                    tint = BackgroundDeep,
+                    modifier = Modifier
+                        .align(Alignment.CenterStart)
+                        .size(24.dp)
+                        .offset(x = pigeonX.value.dp)
+                )
+            }
+        }
     }
 }
 
