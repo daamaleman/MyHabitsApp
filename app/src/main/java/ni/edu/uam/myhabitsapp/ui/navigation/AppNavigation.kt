@@ -2,7 +2,9 @@ package ni.edu.uam.myhabitsapp.ui.navigation
 
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
@@ -34,13 +36,21 @@ fun AppNavigation(viewModel: HabitViewModel = viewModel()) {
         navController = navController,
         startDestination = Screen.Login.route,
         enterTransition = {
-            fadeIn(tween(300)) + slideInHorizontally(tween(300)) { fullWidth -> fullWidth / 4 }
+            fadeIn(animationSpec = tween(500, easing = FastOutSlowInEasing)) +
+                    scaleIn(initialScale = 0.92f, animationSpec = tween(500, easing = FastOutSlowInEasing))
         },
-        exitTransition = { fadeOut(tween(300)) },
+        exitTransition = {
+            fadeOut(animationSpec = tween(450)) +
+                    scaleOut(targetScale = 1.08f, animationSpec = tween(450))
+        },
         popEnterTransition = {
-            fadeIn(tween(300)) + slideInHorizontally(tween(300)) { fullWidth -> -fullWidth / 4 }
+            fadeIn(animationSpec = tween(500, easing = FastOutSlowInEasing)) +
+                    scaleIn(initialScale = 1.08f, animationSpec = tween(500, easing = FastOutSlowInEasing))
         },
-        popExitTransition = { fadeOut(tween(300)) }
+        popExitTransition = {
+            fadeOut(animationSpec = tween(450)) +
+                    scaleOut(targetScale = 0.92f, animationSpec = tween(450))
+        }
     ) {
         composable(Screen.Login.route) {
             LoginScreen(

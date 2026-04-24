@@ -225,18 +225,19 @@ fun LoginScreen(
                             val exitDirection = if (targetState == AuthMode.REGISTER) -1 else 1
                             (
                                 slideInHorizontally(
-                                    animationSpec = tween(360, easing = FastOutSlowInEasing)
-                                ) { width -> width / 12 * enterDirection } +
-                                    fadeIn(animationSpec = tween(320))
+                                    animationSpec = tween(450, easing = FastOutSlowInEasing)
+                                ) { width -> width / 20 * enterDirection } +
+                                    fadeIn(animationSpec = tween(400))
                                 ).togetherWith(
                                 slideOutHorizontally(
-                                    animationSpec = tween(280, easing = FastOutSlowInEasing)
-                                ) { width -> width / 16 * exitDirection } +
-                                    fadeOut(animationSpec = tween(220))
+                                    animationSpec = tween(350, easing = FastOutSlowInEasing)
+                                ) { width -> width / 24 * exitDirection } +
+                                    fadeOut(animationSpec = tween(300))
                             )
                         },
                         label = "authMode"
-                    ) { selectedMode ->
+                    ) {
+selectedMode ->
                         when (selectedMode) {
                             AuthMode.LOGIN -> LoginForm(
                                 email = loginEmail,
@@ -510,7 +511,7 @@ private fun LoginForm(
             label = "Contrasena",
             placeholderText = "Ej: Abc12345",
             leadingIcon = {
-                Crossfade(targetState = password.isBlank(), label = "loginLockIcon") { isBlank ->
+                Crossfade(targetState = password.isBlank(), animationSpec = tween(400), label = "loginLockIcon") { isBlank ->
                     Icon(
                         imageVector = if (isBlank) Icons.Default.LockOpen else Icons.Default.Lock,
                         contentDescription = null
@@ -660,7 +661,7 @@ private fun RegisterForm(
             label = "Contrasena",
             placeholderText = "Ej: Abc12345",
             leadingIcon = {
-                Crossfade(targetState = password.isBlank(), label = "registerLockIcon") { isBlank ->
+                Crossfade(targetState = password.isBlank(), animationSpec = tween(400), label = "registerLockIcon") { isBlank ->
                     Icon(
                         imageVector = if (isBlank) Icons.Default.LockOpen else Icons.Default.Lock,
                         contentDescription = null
