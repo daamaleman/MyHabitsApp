@@ -93,6 +93,11 @@ class HabitViewModel : ViewModel() {
         syncProfileCompletedCount()
     }
 
+    fun deleteHabit(habitId: String) {
+        _habits.update { current -> current.filter { it.id != habitId } }
+        syncProfileCompletedCount()
+    }
+
     fun setNotificationsEnabled(enabled: Boolean) {
         _userProfile.update { it.copy(notificationsEnabled = enabled) }
     }

@@ -34,6 +34,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -53,8 +54,11 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -84,6 +88,7 @@ import ni.edu.uam.myhabitsapp.ui.theme.BorderSubtle
 import ni.edu.uam.myhabitsapp.ui.theme.HabitFlowTheme
 import ni.edu.uam.myhabitsapp.ui.theme.SurfaceCard
 import ni.edu.uam.myhabitsapp.ui.theme.SurfaceItem
+import ni.edu.uam.myhabitsapp.ui.theme.DangerRed
 import ni.edu.uam.myhabitsapp.ui.theme.TextDisabled
 import ni.edu.uam.myhabitsapp.ui.theme.TextPrimary
 import ni.edu.uam.myhabitsapp.ui.theme.TextSecondary
@@ -164,7 +169,8 @@ fun DashboardScreen(
                 item {
                     HabitsSection(
                         habits = habits,
-                        onToggle = viewModel::toggleHabit
+                        onToggle = viewModel::toggleHabit,
+                        onDelete = viewModel::deleteHabit
                     )
                 }
                 item { WeeklySummary(weekDays = weekDays) }
@@ -335,7 +341,8 @@ private fun ProgressCard(progress: Float) {
 @Composable
 private fun HabitsSection(
     habits: List<Habit>,
-    onToggle: (String) -> Unit
+    onToggle: (String) -> Unit,
+    onDelete: (String) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(
@@ -350,12 +357,71 @@ private fun HabitsSection(
         }
 
         habits.forEach { habit ->
-            HabitItem(
+            SwipeableHabitItem(
                 habit = habit,
-                onToggle = { onToggle(habit.id) }
+                onToggle = { onToggle(habit.id) },
+                onDelete = { onDelete(habit.id) }
             )
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SwipeableHabitItem(
+    habit: Habit,
+    onToggle: () -> Unit,
+    onDelete: () -> Unit
+) {
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = {
+            if (it == SwipeToDismissBoxValue.EndToStart) {
+                onDelete()
+                true
+            } else {
+                false
+            }
+        }
+    )
+
+    SwipeToDismissBox(
+        state = dismissState,
+        enableDismissFromStartToEnd = false,
+        backgroundContent = {
+            val color by animateColorAsState(
+                when (dismissState.targetValue) {
+                    SwipeToDismissBoxValue.EndToStart -> DangerRed.copy(alpha = 0.8f)
+                    else -> Color.Transparent
+                }, label = "dismissColor"
+            )
+            val scale by animateFloatAsState(
+                if (dismissState.targetValue == SwipeToDismissBoxValue.EndToStart) 1.2f else 0.8f,
+                label = "iconScale"
+            )
+
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(18.dp))
+                    .background(color)
+                    .padding(horizontal = 24.dp),
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = "Eliminar",
+                    tint = Color.White,
+                    modifier = Modifier.graphicsLayer(scaleX = scale, scaleY = scale)
+                )
+            }
+        },
+        content = {
+            HabitItem(
+                habit = habit,
+                onToggle = onToggle
+            )
+        }
+    )
 }
 
 @Composable
