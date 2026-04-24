@@ -2,9 +2,9 @@ package ni.edu.uam.myhabitsapp.ui.navigation
 
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
@@ -32,24 +32,36 @@ sealed class Screen(val route: String) {
 fun AppNavigation(viewModel: HabitViewModel = viewModel()) {
     val navController = rememberNavController()
 
+    // Curva de WhatsApp (suave y elástica)
+    val whatsappEasing = CubicBezierEasing(0.2f, 0.8f, 0.2f, 1f)
+    val animDuration = 600
+
     NavHost(
         navController = navController,
         startDestination = Screen.Login.route,
         enterTransition = {
-            fadeIn(animationSpec = tween(500, easing = FastOutSlowInEasing)) +
-                    scaleIn(initialScale = 0.92f, animationSpec = tween(500, easing = FastOutSlowInEasing))
+            slideInHorizontally(
+                initialOffsetX = { fullWidth -> (fullWidth * 0.15f).toInt() },
+                animationSpec = tween(animDuration, easing = whatsappEasing)
+            ) + fadeIn(animationSpec = tween(animDuration))
         },
         exitTransition = {
-            fadeOut(animationSpec = tween(450)) +
-                    scaleOut(targetScale = 1.08f, animationSpec = tween(450))
+            slideOutHorizontally(
+                targetOffsetX = { fullWidth -> -(fullWidth * 0.15f).toInt() },
+                animationSpec = tween(animDuration, easing = whatsappEasing)
+            ) + fadeOut(animationSpec = tween(animDuration))
         },
         popEnterTransition = {
-            fadeIn(animationSpec = tween(500, easing = FastOutSlowInEasing)) +
-                    scaleIn(initialScale = 1.08f, animationSpec = tween(500, easing = FastOutSlowInEasing))
+            slideInHorizontally(
+                initialOffsetX = { fullWidth -> -(fullWidth * 0.15f).toInt() },
+                animationSpec = tween(animDuration, easing = whatsappEasing)
+            ) + fadeIn(animationSpec = tween(animDuration))
         },
         popExitTransition = {
-            fadeOut(animationSpec = tween(450)) +
-                    scaleOut(targetScale = 0.92f, animationSpec = tween(450))
+            slideOutHorizontally(
+                targetOffsetX = { fullWidth -> (fullWidth * 0.15f).toInt() },
+                animationSpec = tween(animDuration, easing = whatsappEasing)
+            ) + fadeOut(animationSpec = tween(animDuration))
         }
     ) {
         composable(Screen.Login.route) {
@@ -109,6 +121,3 @@ fun AppNavigation(viewModel: HabitViewModel = viewModel()) {
         }
     }
 }
-
-
-
