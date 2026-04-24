@@ -386,13 +386,13 @@ private fun SwipeableHabitItem(
     
     val offsetX = remember { Animatable(0f) }
     val scope = rememberCoroutineScope()
-    var isConfirmed by remember { mutableStateOf(false) }
+    var isRevealed by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(18.dp))
-            .background(if (isConfirmed) DangerRed else DangerRed.copy(alpha = 0.8f))
+            .background(if (offsetX.value < revealedOffset) DangerRed else DangerRed.copy(alpha = 0.8f))
     ) {
         // Delete button revealed behind
         Box(
@@ -401,10 +401,7 @@ private fun SwipeableHabitItem(
                 .padding(end = 12.dp)
                 .size(56.dp)
                 .clickable {
-                    if (!isConfirmed) {
-                        isConfirmed = true
-                        scope.launch { offsetX.animateTo(revealedOffset) }
-                    } else {
+                    if (isRevealed) {
                         onDelete()
                     }
                 },
@@ -414,7 +411,7 @@ private fun SwipeableHabitItem(
                 Icons.Default.Delete,
                 contentDescription = "Eliminar",
                 tint = Color.White,
-                modifier = Modifier.size(if (isConfirmed) 32.dp else 24.dp)
+                modifier = Modifier.size(if (offsetX.value < revealedOffset - 20f) 32.dp else 24.dp)
             )
         }
 
@@ -427,16 +424,19 @@ private fun SwipeableHabitItem(
                         onDragEnd = {
                             scope.launch {
                                 when {
+                                    // Trigger delete if dragged very far
                                     offsetX.value < maxDeleteOffset * 0.7f -> {
                                         onDelete()
                                     }
-                                    offsetX.value < revealedOffset * 0.6f -> {
+                                    // Anchor if dragged past threshold
+                                    offsetX.value < revealedOffset * 0.5f -> {
                                         offsetX.animateTo(revealedOffset)
-                                        isConfirmed = true
+                                        isRevealed = true
                                     }
+                                    // Snap back otherwise
                                     else -> {
                                         offsetX.animateTo(0f)
-                                        isConfirmed = false
+                                        isRevealed = false
                                     }
                                 }
                             }
@@ -444,6 +444,7 @@ private fun SwipeableHabitItem(
                         onHorizontalDrag = { change, dragAmount ->
                             change.consume()
                             scope.launch {
+                                // Allow dragging up to max offset
                                 val nextValue = (offsetX.value + dragAmount).coerceIn(maxDeleteOffset, 0f)
                                 offsetX.snapTo(nextValue)
                             }
@@ -458,9 +459,10 @@ private fun SwipeableHabitItem(
                     if (offsetX.value == 0f) {
                         onToggle()
                     } else {
+                        // If moved at all, snap back instead of toggling
                         scope.launch {
                             offsetX.animateTo(0f)
-                            isConfirmed = false
+                            isRevealed = false
                         }
                     }
                 }
