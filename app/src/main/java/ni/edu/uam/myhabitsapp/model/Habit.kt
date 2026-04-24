@@ -24,19 +24,26 @@ object ColorSerializer : KSerializer<Color> {
 }
 
 @Serializable
-enum class HabitCategory(val label: String, val emoji: String, @Serializable(with = ColorSerializer::class) val color: Color) {
-    HEALTH("Salud", "💚", Color(0xFF64FFAA)),
-    STUDY("Estudio", "📚", Color(0xFFA78BFA)),
-    FITNESS("Fitness", "🏃", Color(0xFFFB923C)),
-    MIND("Mente", "🧘", Color(0xFF60A5FA)),
-    WORK("Trabajo", "💼", Color(0xFFFBBF24))
+data class HabitCategory(
+    val label: String,
+    val emoji: String,
+    @Serializable(with = ColorSerializer::class) val color: Color
+) {
+    companion object {
+        val HEALTH = HabitCategory("Salud", "💚", Color(0xFF64FFAA))
+        val STUDY = HabitCategory("Estudio", "📚", Color(0xFFA78BFA))
+        val FITNESS = HabitCategory("Fitness", "🏃", Color(0xFFFB923C))
+        val MIND = HabitCategory("Mente", "🧘", Color(0xFF60A5FA))
+        val WORK = HabitCategory("Trabajo", "💼", Color(0xFFFBBF24))
+
+        fun defaultCategories() = listOf(HEALTH, STUDY, FITNESS, MIND, WORK)
+    }
 }
 
 @Serializable
 data class Habit(
     val id: String = UUID.randomUUID().toString(),
     val name: String,
-    val emoji: String,
     val category: HabitCategory,
     val goalDescription: String,
     val isCompleted: Boolean = false

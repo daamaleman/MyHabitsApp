@@ -46,6 +46,9 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
     private val _habits = MutableStateFlow(loadHabits())
     val habits: StateFlow<List<Habit>> = _habits.asStateFlow()
 
+    private val _categories = MutableStateFlow(UserLocalStorage.loadCategories(context))
+    val categories: StateFlow<List<HabitCategory>> = _categories.asStateFlow()
+
     private val _weekDays = MutableStateFlow(sampleWeekDays())
     val weekDays: StateFlow<List<WeekDay>> = _weekDays.asStateFlow()
 
@@ -66,8 +69,9 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
         val weekCompletedDays = weekDays.count { it.isCompleted }
         val weekCompletionPercent = if (weekDays.isEmpty()) 0f else weekCompletedDays.toFloat() / weekDays.size.toFloat()
 
-        val categories = HabitCategory.entries.map { category ->
-            val count = habits.count { it.category == category }
+        val allAvailableCategories = _categories.value
+        val categoriesStats = allAvailableCategories.map { category ->
+            val count = habits.count { it.category.label == category.label }
             val percent = if (totalHabits == 0) 0f else count.toFloat() / totalHabits.toFloat()
             CategoryStats(category = category, count = count, percent = percent)
         }.filter { it.count > 0 }
@@ -81,7 +85,7 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
             todayCompletedHabits = completedHabits,
             weekCompletedDays = weekCompletedDays,
             weekCompletionPercent = weekCompletionPercent,
-            categories = categories,
+            categories = categoriesStats,
             weekDays = weekDays
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), StatisticsUiState())
@@ -106,6 +110,14 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
         _habits.update { current -> current.filter { it.id != habitId } }
         saveHabits()
         syncProfileCompletedCount()
+    }
+
+    fun addCategory(category: HabitCategory) {
+        _categories.update { current ->
+            if (current.any { it.label.equals(category.label, ignoreCase = true) }) current
+            else current + category
+        }
+        UserLocalStorage.saveCategories(context, _categories.value)
     }
 
     fun setNotificationsEnabled(enabled: Boolean) {
@@ -143,7 +155,9 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
     fun deleteAccount() {
         _userProfile.value = initialProfile()
         _habits.value = sampleHabits()
+        _categories.value = HabitCategory.defaultCategories()
         saveHabits()
+        UserLocalStorage.saveCategories(context, _categories.value)
     }
 
     private fun loadHabits(): List<Habit> {
@@ -172,10 +186,10 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
     )
 
     private fun sampleHabits() = listOf(
-        Habit("1", "Beber agua", "💧", HabitCategory.HEALTH, "2L", true),
-        Habit("2", "Leer", "📚", HabitCategory.STUDY, "30 min · 08:00 AM", true),
-        Habit("3", "Meditar", "🧘", HabitCategory.MIND, "10 min · 07:00 PM", false),
-        Habit("4", "Ejercicio", "🏃", HabitCategory.FITNESS, "45 min · 06:00 AM", true)
+        Habit("1", "Beber agua 💧", HabitCategory.HEALTH, "2L", true),
+        Habit("2", "Leer 📚", HabitCategory.STUDY, "30 min · 08:00 AM", true),
+        Habit("3", "Meditar 🧘", HabitCategory.MIND, "10 min · 07:00 PM", false),
+        Habit("4", "Ejercicio 🏃", HabitCategory.FITNESS, "45 min · 06:00 AM", true)
     )
 
     private fun sampleWeekDays() = listOf(

@@ -4,6 +4,7 @@ import android.content.Context
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import ni.edu.uam.myhabitsapp.model.Habit
+import ni.edu.uam.myhabitsapp.model.HabitCategory
 import java.net.Inet4Address
 import java.net.NetworkInterface
 import java.util.Locale
@@ -17,6 +18,7 @@ private const val KEY_LAST_LOGIN_EMAIL = "last_login_email"
 private const val KEY_EMAIL_BY_IP_PREFIX = "login_email_ip_"
 private const val KEY_DARK_MODE_ENABLED = "dark_mode_enabled"
 private const val KEY_HABITS = "habits_list"
+private const val KEY_CATEGORIES = "categories_list"
 
 data class StoredUser(
     val name: String,
@@ -133,6 +135,28 @@ object UserLocalStorage {
             }
         } else {
             emptyList()
+        }
+    }
+
+    fun saveCategories(context: Context, categories: List<HabitCategory>) {
+        val json = Json.encodeToString(categories)
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .putString(KEY_CATEGORIES, json)
+            .apply()
+    }
+
+    fun loadCategories(context: Context): List<HabitCategory> {
+        val json = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getString(KEY_CATEGORIES, null)
+        return if (json != null) {
+            try {
+                Json.decodeFromString<List<HabitCategory>>(json)
+            } catch (e: Exception) {
+                HabitCategory.defaultCategories()
+            }
+        } else {
+            HabitCategory.defaultCategories()
         }
     }
 

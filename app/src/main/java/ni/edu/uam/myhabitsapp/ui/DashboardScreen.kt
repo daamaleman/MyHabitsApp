@@ -38,6 +38,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Save
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -45,6 +47,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -111,6 +114,7 @@ fun DashboardScreen(
     onProfileClick: () -> Unit
 ) {
     val habits by viewModel.habits.collectAsStateWithLifecycle()
+    val categories by viewModel.categories.collectAsStateWithLifecycle()
     val weekDays by viewModel.weekDays.collectAsStateWithLifecycle()
     val profile by viewModel.userProfile.collectAsStateWithLifecycle()
     val progress by viewModel.progressPercent.collectAsStateWithLifecycle()
@@ -186,6 +190,8 @@ fun DashboardScreen(
 
     if (showAddSheet) {
         AddHabitBottomSheet(
+            categories = categories,
+            onAddCategory = viewModel::addCategory,
             onDismiss = { showAddSheet = false },
             onSave = { habit ->
                 viewModel.addHabit(habit)
@@ -533,7 +539,7 @@ private fun HabitItem(
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "${habit.name} ${habit.emoji}",
+                    text = habit.name,
                     color = nameColor,
                     style = MaterialTheme.typography.titleMedium,
                     textDecoration = if (habit.isCompleted) TextDecoration.LineThrough else TextDecoration.None
@@ -644,14 +650,16 @@ private fun DayCircle(day: WeekDay, modifier: Modifier = Modifier) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AddHabitBottomSheet(
+    categories: List<HabitCategory>,
+    onAddCategory: (HabitCategory) -> Unit,
     onDismiss: () -> Unit,
     onSave: (Habit) -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var name by remember { mutableStateOf("") }
-    var emoji by remember { mutableStateOf("✨") }
     var goal by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf(HabitCategory.HEALTH) }
+    var showAddCategoryDialog by remember { mutableStateOf(false) }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -688,23 +696,7 @@ private fun AddHabitBottomSheet(
                 onValueChange = { name = it },
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text("Nombre") },
-                shape = RoundedCornerShape(14.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = AccentGreen,
-                    unfocusedBorderColor = BorderSubtle,
-                    focusedContainerColor = SurfaceItem,
-                    unfocusedContainerColor = SurfaceItem,
-                    focusedTextColor = TextPrimary,
-                    unfocusedTextColor = TextPrimary,
-                    cursorColor = AccentGreen
-                )
-            )
-
-            OutlinedTextField(
-                value = emoji,
-                onValueChange = { emoji = it.take(2) },
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text("Emoji") },
+                placeholder = { Text("Ej: Meditar 🧘") },
                 shape = RoundedCornerShape(14.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedBorderColor = AccentGreen,
@@ -736,21 +728,44 @@ private fun AddHabitBottomSheet(
 
             Text(text = "Categoría", color = TextSecondary, style = MaterialTheme.typography.labelMedium)
 
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                HabitCategory.entries.chunked(2).forEach { row ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
-                        row.forEach { category ->
-                            FilterChip(
-                                selected = selectedCategory == category,
-                                onClick = { selectedCategory = category },
-                                label = { Text(text = "${category.emoji} ${category.label}") },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                        if (row.size == 1) {
-                            Spacer(modifier = Modifier.weight(1f))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    categories.chunked(2).forEach { row ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                            row.forEach { category ->
+                                FilterChip(
+                                    selected = selectedCategory.label == category.label,
+                                    onClick = { selectedCategory = category },
+                                    label = { Text(text = "${category.emoji} ${category.label}") },
+                                    modifier = Modifier.weight(1f),
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = category.color.copy(alpha = 0.2f),
+                                        selectedLabelColor = category.color
+                                    )
+                                )
+                            }
+                            if (row.size == 1) {
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
                         }
                     }
+                }
+                
+                IconButton(
+                    onClick = { showAddCategoryDialog = true },
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(SurfaceItem)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Nueva categoría", tint = AccentGreen)
                 }
             }
 
@@ -760,7 +775,6 @@ private fun AddHabitBottomSheet(
                         onSave(
                             Habit(
                                 name = name.trim(),
-                                emoji = if (emoji.isBlank()) selectedCategory.emoji else emoji,
                                 category = selectedCategory,
                                 goalDescription = goal.ifBlank { "Meta personalizada" },
                                 isCompleted = false
@@ -775,11 +789,65 @@ private fun AddHabitBottomSheet(
                     contentColor = BackgroundDeep
                 )
             ) {
-                Text(text = "Guardar hábito", fontWeight = FontWeight.ExtraBold)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Icon(Icons.Default.Save, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Text(text = "Guardar hábito", fontWeight = FontWeight.ExtraBold)
+                }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
         }
+    }
+
+    if (showAddCategoryDialog) {
+        var newCatName by remember { mutableStateOf("") }
+        var newCatEmoji by remember { mutableStateOf("✨") }
+
+        AlertDialog(
+            onDismissRequest = { showAddCategoryDialog = false },
+            containerColor = SurfaceCard,
+            title = { Text("Nueva Categoría", color = TextPrimary) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    OutlinedTextField(
+                        value = newCatName,
+                        onValueChange = { newCatName = it },
+                        label = { Text("Nombre") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = newCatEmoji,
+                        onValueChange = { newCatEmoji = it.take(2) },
+                        label = { Text("Emoji") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (newCatName.isNotBlank()) {
+                            onAddCategory(
+                                HabitCategory(
+                                    label = newCatName.trim(),
+                                    emoji = newCatEmoji.ifBlank { "✨" },
+                                    color = Color(0xFF64FFAA) // Color por defecto
+                                )
+                            )
+                            showAddCategoryDialog = false
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = AccentGreen, contentColor = BackgroundDeep)
+                ) {
+                    Text("Agregar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAddCategoryDialog = false }) {
+                    Text("Cancelar", color = TextSecondary)
+                }
+            }
+        )
     }
 }
 
