@@ -1,0 +1,18 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+    <!-- Stylized Leaf/Growth Flow -->
+    <path
+        android:fillColor="#64FFAA"
+        android:pathData="M60,20C60,20 85,45 85,75C85,99.1 65.6,105 60,105C54.4,105 35,99.1 35,75C35,45 60,20 60,20Z" />
+    <path
+        android:fillColor="#121212"
+        android:pathData="M60,45C60,45 70,55 70,70C70,83 65.5,88 60,88C54.5,88 50,83 50,70C50,55 60,45 60,45Z" />
+    <path
+        android:fillColor="#64FFAA"
+        android:pathData="M60,60L60,105"
+        android:strokeWidth="2"
+        android:strokeColor="#121212"/>
+</vector>

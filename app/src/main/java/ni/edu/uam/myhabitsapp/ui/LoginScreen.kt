@@ -84,6 +84,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.painterResource
+import ni.edu.uam.myhabitsapp.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -188,9 +190,14 @@ fun LoginScreen(
                             .shadow(18.dp, RoundedCornerShape(24.dp), clip = false)
                             .clip(RoundedCornerShape(24.dp))
                             .background(Brush.linearGradient(listOf(AccentGreen, AccentGreenDark)))
-                            .padding(18.dp)
+                            .padding(14.dp)
                     ) {
-                        Text(text = "🌱", fontSize = 34.sp)
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_habitflow_logo),
+                            contentDescription = "HabitFlow Logo",
+                            tint = Color.Unspecified,
+                            modifier = Modifier.size(48.dp)
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(22.dp))
