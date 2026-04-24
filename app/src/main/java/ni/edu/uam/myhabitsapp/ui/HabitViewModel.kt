@@ -148,8 +148,8 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
         _userProfile.update { it.copy(imageUri = imageUri) }
     }
 
-    fun updateProfile(name: String, email: String, password: String) {
-        _userProfile.update { it.copy(name = name, email = email, password = password) }
+    fun updateProfile(name: String, email: String, password: String, imageUri: String?) {
+        _userProfile.update { it.copy(name = name, email = email, password = password, imageUri = imageUri) }
     }
 
     fun deleteAccount() {

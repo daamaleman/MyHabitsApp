@@ -1,8 +1,14 @@
 package ni.edu.uam.myhabitsapp.ui
 
+import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,16 +18,19 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AddAPhoto
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -45,6 +54,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -54,10 +65,15 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import ni.edu.uam.myhabitsapp.data.ProfileImageStorage
 import ni.edu.uam.myhabitsapp.data.StoredUser
 import ni.edu.uam.myhabitsapp.data.UserLocalStorage
+import ni.edu.uam.myhabitsapp.ui.components.UserAvatarImage
 import ni.edu.uam.myhabitsapp.ui.theme.AccentGreen
+import ni.edu.uam.myhabitsapp.ui.theme.AccentPurple
 import ni.edu.uam.myhabitsapp.ui.theme.BackgroundDeep
 import ni.edu.uam.myhabitsapp.ui.theme.BorderSubtle
 import ni.edu.uam.myhabitsapp.ui.theme.DangerRed
@@ -80,10 +96,24 @@ fun EditProfileScreen(
     var email by remember { mutableStateOf(profile.email) }
     var currentPassword by remember { mutableStateOf("") }
     var newPassword by remember { mutableStateOf("") }
+    var currentImageUri by remember { mutableStateOf(profile.imageUri) }
     
     var currentPasswordVisible by remember { mutableStateOf(false) }
     var newPasswordVisible by remember { mutableStateOf(false) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            val localUri = ProfileImageStorage.saveCircularAvatar(context, uri)
+            if (localUri != null) {
+                currentImageUri = localUri
+            } else {
+                Toast.makeText(context, "No se pudo procesar la imagen", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
     
     val layoutDirection = LocalLayoutDirection.current
     val contentMaxWidth = 520.dp
@@ -134,6 +164,56 @@ fun EditProfileScreen(
                         style = MaterialTheme.typography.titleLarge,
                         modifier = Modifier.padding(start = 10.dp)
                     )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Avatar Section
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .size(100.dp)
+                        .clickable {
+                            imagePickerLauncher.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                            )
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(90.dp)
+                            .clip(CircleShape)
+                            .background(Brush.linearGradient(listOf(AccentPurple, AccentGreen)))
+                            .border(2.dp, AccentGreen.copy(alpha = 0.5f), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        UserAvatarImage(
+                            imageUri = currentImageUri,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(CircleShape)
+                        )
+                    }
+
+                    Surface(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .size(32.dp)
+                            .zIndex(2f),
+                        shape = CircleShape,
+                        color = AccentGreen,
+                        border = BorderStroke(1.dp, BorderSubtle)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Default.AddAPhoto,
+                                contentDescription = "Cambiar foto",
+                                tint = BackgroundDeep,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -245,8 +325,8 @@ fun EditProfileScreen(
                                 Toast.makeText(context, "Nombre y correo son requeridos", Toast.LENGTH_SHORT).show()
                             }
                             else -> {
-                                viewModel.updateProfile(name.trim(), email.trim(), passwordToSave)
-                                UserLocalStorage.saveUser(context, StoredUser(name.trim(), email.trim(), passwordToSave, profile.imageUri))
+                                viewModel.updateProfile(name.trim(), email.trim(), passwordToSave, currentImageUri)
+                                UserLocalStorage.saveUser(context, StoredUser(name.trim(), email.trim(), passwordToSave, currentImageUri))
                                 Toast.makeText(context, "Perfil actualizado", Toast.LENGTH_SHORT).show()
                                 onBack()
                             }
