@@ -4,6 +4,7 @@ import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -11,6 +12,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,6 +23,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -54,16 +57,14 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.SwipeToDismissBox
-import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -71,13 +72,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.launch
 import ni.edu.uam.myhabitsapp.model.Habit
 import ni.edu.uam.myhabitsapp.model.HabitCategory
 import ni.edu.uam.myhabitsapp.model.WeekDay
@@ -366,62 +371,98 @@ private fun HabitsSection(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SwipeableHabitItem(
     habit: Habit,
     onToggle: () -> Unit,
     onDelete: () -> Unit
 ) {
-    val dismissState = rememberSwipeToDismissBoxState(
-        confirmValueChange = {
-            if (it == SwipeToDismissBoxValue.EndToStart) {
-                onDelete()
-                true
-            } else {
-                false
-            }
+    val density = LocalDensity.current
+    val revealedOffset = with(density) { -80.dp.toPx() }
+    val maxDeleteOffset = with(density) { -200.dp.toPx() }
+    
+    val offsetX = remember { Animatable(0f) }
+    val scope = rememberCoroutineScope()
+    var isConfirmed by remember { mutableStateOf(false) }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(18.dp))
+            .background(if (isConfirmed) DangerRed else DangerRed.copy(alpha = 0.8f))
+    ) {
+        // Delete button revealed behind
+        Box(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .padding(end = 12.dp)
+                .size(56.dp)
+                .clickable {
+                    if (!isConfirmed) {
+                        isConfirmed = true
+                    } else {
+                        onDelete()
+                    }
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                Icons.Default.Delete,
+                contentDescription = "Eliminar",
+                tint = Color.White,
+                modifier = Modifier.size(if (isConfirmed) 32.dp else 24.dp)
+            )
         }
-    )
 
-    SwipeToDismissBox(
-        state = dismissState,
-        enableDismissFromStartToEnd = false,
-        backgroundContent = {
-            val color by animateColorAsState(
-                when (dismissState.targetValue) {
-                    SwipeToDismissBoxValue.EndToStart -> DangerRed.copy(alpha = 0.8f)
-                    else -> Color.Transparent
-                }, label = "dismissColor"
-            )
-            val scale by animateFloatAsState(
-                if (dismissState.targetValue == SwipeToDismissBoxValue.EndToStart) 1.2f else 0.8f,
-                label = "iconScale"
-            )
-
-            Box(
-                Modifier
-                    .fillMaxSize()
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(color)
-                    .padding(horizontal = 24.dp),
-                contentAlignment = Alignment.CenterEnd
-            ) {
-                Icon(
-                    Icons.Default.Delete,
-                    contentDescription = "Eliminar",
-                    tint = Color.White,
-                    modifier = Modifier.graphicsLayer(scaleX = scale, scaleY = scale)
-                )
-            }
-        },
-        content = {
+        // Habit item content sliding over
+        Box(
+            modifier = Modifier
+                .offset { IntOffset(offsetX.value.roundToInt(), 0) }
+                .pointerInput(Unit) {
+                    detectHorizontalDragGestures(
+                        onDragEnd = {
+                            scope.launch {
+                                when {
+                                    offsetX.value < maxDeleteOffset / 1.5f -> {
+                                        onDelete()
+                                    }
+                                    offsetX.value < revealedOffset / 2f -> {
+                                        offsetX.animateTo(revealedOffset)
+                                        isConfirmed = true
+                                    }
+                                    else -> {
+                                        offsetX.animateTo(0f)
+                                        isConfirmed = false
+                                    }
+                                }
+                            }
+                        },
+                        onHorizontalDrag = { change, dragAmount ->
+                            change.consume()
+                            scope.launch {
+                                val nextValue = (offsetX.value + dragAmount).coerceIn(maxDeleteOffset, 0f)
+                                offsetX.snapTo(nextValue)
+                            }
+                        }
+                    )
+                }
+                .fillMaxWidth()
+        ) {
             HabitItem(
                 habit = habit,
-                onToggle = onToggle
+                onToggle = {
+                    if (offsetX.value == 0f) {
+                        onToggle()
+                    } else {
+                        scope.launch {
+                            offsetX.animateTo(0f)
+                            isConfirmed = false
+                        }
+                    }
+                }
             )
         }
-    )
+    }
 }
 
 @Composable
