@@ -62,6 +62,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -362,11 +363,13 @@ private fun HabitsSection(
         }
 
         habits.forEach { habit ->
-            SwipeableHabitItem(
-                habit = habit,
-                onToggle = { onToggle(habit.id) },
-                onDelete = { onDelete(habit.id) }
-            )
+            key(habit.id) {
+                SwipeableHabitItem(
+                    habit = habit,
+                    onToggle = { onToggle(habit.id) },
+                    onDelete = { onDelete(habit.id) }
+                )
+            }
         }
     }
 }
@@ -400,6 +403,7 @@ private fun SwipeableHabitItem(
                 .clickable {
                     if (!isConfirmed) {
                         isConfirmed = true
+                        scope.launch { offsetX.animateTo(revealedOffset) }
                     } else {
                         onDelete()
                     }
@@ -423,10 +427,10 @@ private fun SwipeableHabitItem(
                         onDragEnd = {
                             scope.launch {
                                 when {
-                                    offsetX.value < maxDeleteOffset / 1.5f -> {
+                                    offsetX.value < maxDeleteOffset * 0.7f -> {
                                         onDelete()
                                     }
-                                    offsetX.value < revealedOffset / 2f -> {
+                                    offsetX.value < revealedOffset * 0.6f -> {
                                         offsetX.animateTo(revealedOffset)
                                         isConfirmed = true
                                     }
