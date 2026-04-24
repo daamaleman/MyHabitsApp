@@ -1,6 +1,7 @@
 package ni.edu.uam.myhabitsapp.ui
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
@@ -10,6 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import ni.edu.uam.myhabitsapp.data.UserLocalStorage
 import ni.edu.uam.myhabitsapp.model.Habit
 import ni.edu.uam.myhabitsapp.model.HabitCategory
 import ni.edu.uam.myhabitsapp.model.UserProfile
@@ -34,9 +36,14 @@ data class StatisticsUiState(
     val weekDays: List<WeekDay> = emptyList()
 )
 
-class HabitViewModel : ViewModel() {
+class HabitViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val _habits = MutableStateFlow(sampleHabits())
+    // Constructor para Previews
+    constructor() : this(Application())
+
+    private val context = getApplication<Application>().applicationContext
+
+    private val _habits = MutableStateFlow(loadHabits())
     val habits: StateFlow<List<Habit>> = _habits.asStateFlow()
 
     private val _weekDays = MutableStateFlow(sampleWeekDays())
@@ -85,16 +92,19 @@ class HabitViewModel : ViewModel() {
                 if (habit.id == habitId) habit.copy(isCompleted = !habit.isCompleted) else habit
             }
         }
+        saveHabits()
         syncProfileCompletedCount()
     }
 
     fun addHabit(habit: Habit) {
         _habits.update { current -> current + habit }
+        saveHabits()
         syncProfileCompletedCount()
     }
 
     fun deleteHabit(habitId: String) {
         _habits.update { current -> current.filter { it.id != habitId } }
+        saveHabits()
         syncProfileCompletedCount()
     }
 
@@ -133,6 +143,16 @@ class HabitViewModel : ViewModel() {
     fun deleteAccount() {
         _userProfile.value = initialProfile()
         _habits.value = sampleHabits()
+        saveHabits()
+    }
+
+    private fun loadHabits(): List<Habit> {
+        val storedHabits = UserLocalStorage.loadHabits(context)
+        return if (storedHabits.isEmpty()) sampleHabits() else storedHabits
+    }
+
+    private fun saveHabits() {
+        UserLocalStorage.saveHabits(context, _habits.value)
     }
 
     private fun syncProfileCompletedCount() {
@@ -145,7 +165,7 @@ class HabitViewModel : ViewModel() {
         email = "ana@habitflow.com",
         password = "",
         imageUri = null,
-        habitsCompleted = sampleHabits().count { it.isCompleted },
+        habitsCompleted = loadHabits().count { it.isCompleted },
         currentStreak = 7,
         notificationsEnabled = true,
         darkModeEnabled = true
@@ -168,5 +188,3 @@ class HabitViewModel : ViewModel() {
         WeekDay("D", false, false)
     )
 }
-
-

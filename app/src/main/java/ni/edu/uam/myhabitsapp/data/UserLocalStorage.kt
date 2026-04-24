@@ -1,6 +1,9 @@
 package ni.edu.uam.myhabitsapp.data
 
 import android.content.Context
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import ni.edu.uam.myhabitsapp.model.Habit
 import java.net.Inet4Address
 import java.net.NetworkInterface
 import java.util.Locale
@@ -13,6 +16,7 @@ private const val KEY_IMAGE_URI = "image_uri"
 private const val KEY_LAST_LOGIN_EMAIL = "last_login_email"
 private const val KEY_EMAIL_BY_IP_PREFIX = "login_email_ip_"
 private const val KEY_DARK_MODE_ENABLED = "dark_mode_enabled"
+private const val KEY_HABITS = "habits_list"
 
 data class StoredUser(
     val name: String,
@@ -108,6 +112,28 @@ object UserLocalStorage {
             .edit()
             .clear()
             .apply()
+    }
+
+    fun saveHabits(context: Context, habits: List<Habit>) {
+        val json = Json.encodeToString(habits)
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .putString(KEY_HABITS, json)
+            .apply()
+    }
+
+    fun loadHabits(context: Context): List<Habit> {
+        val json = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getString(KEY_HABITS, null)
+        return if (json != null) {
+            try {
+                Json.decodeFromString<List<Habit>>(json)
+            } catch (e: Exception) {
+                emptyList()
+            }
+        } else {
+            emptyList()
+        }
     }
 
     private fun resolveCurrentIpv4Address(): String? {
